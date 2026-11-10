@@ -1,0 +1,76 @@
+# ESP-IDF: compilacao, caches e outputs gerados
+/build/
+/build-*/
+/managed_components/
+/.idf_component_manager/
+/sdkconfig
+/sdkconfig.old
+/sdkconfig.*.old
+/sdkconfig.bak*
+/compile_commands.json
+/ccache/
+*.elf
+*.map
+*.bin
+*.hex
+*.lst
+*.dmp
+
+# Arquivos antigos de exemplo/etapas preliminares, nao usados na v0.1.0
+/main/hello_world_main.c
+/main/juvenal_main.c
+
+# Copia local duplicada do TFLite; versionar APENAS main/juvehnal.tflite
+/models/*.tflite
+
+# Backups temporarios criados durante ajustes
+*.bak
+*.bak-*
+*.bak-*
+*.bak-model
+*.bak-wake
+*.bak-public-deps
+*.orig
+*.rej
+*~
+*.tmp
+*.temp
+
+# Editor, ambiente local, SO
+.vscode/
+.idea/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs e evidencias que podem conter dados locais
+*.log
+/logs/
+/evidencias-locais/
+*.core
+core.*
+
+# Segredos, credenciais e configuracoes locais (NUNCA versionar)
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+certs/private/
+*.pem
+*.key
+*.p12
+*.pfx
+*secret*.json
+*credential*.json
+*token*.txt
+*.local
+
+# NOTE: manter versionados CMakeLists.txt, sdkconfig.defaults,
+# main/juvehnal.tflite, main/idf_component.yml, dependencies.lock,
+# components/micro_wake_word_idf/ com LICENSE.md e docs/.
