@@ -74,19 +74,19 @@ juvenal_esp_v2/
 ├── AGENTS.md                    # Orientação para agentes e desenvolvedores
 ├── .gitignore
 ├── .gitattributes
-├── sdkconfig.defaults            # Configuração-base pública
-├── CMakeLists.txt                # Projeto ESP-IDF existente
-├── dependencies.lock             # Versões resolvidas (versionar se presente)
+├── sdkconfig.defaults           # Configuração-base pública
+├── CMakeLists.txt               # Projeto ESP-IDF existente
+├── dependencies.lock            # Versões resolvidas (versionar se presente)
 ├── main/
 │   ├── CMakeLists.txt
 │   ├── idf_component.yml
 │   ├── juvenal_main.cpp          # Microfone + detector + callback
 │   ├── juvenal_led.h
-│   ├── juvenal_led.c              # Estados do LED e tarefa FreeRTOS
+│   ├── juvenal_led.c             # Estados do LED e tarefa FreeRTOS
 │   └── juvehnal.tflite           # Modelo necessário ao build (63.520 B)
 ├── components/
 │   └── micro_wake_word_idf/      # Componente local COM correções de compatibilidade
-│       └── LICENSE.md            # Licença original GPLv3 — preservar
+│       └── LICENSE.md           # Licença original GPLv3 — preservar
 ├── models/
 │   └── juvehnal.json             # Metadados opcionais, manter se presente
 └── docs/
@@ -110,10 +110,21 @@ O binário ainda pode aparecer como `hello_world.bin` e o projeto como `hello_wo
 
 Comece pelo [índice de documentação](docs/README.md): ambiente do zero, GPIOs, cores dos fios, procedimento de testes, configuração do TensorFlow, compatibilidade entre versões, solução dos erros reais e publicação no GitHub.
 
+## Agradecimento pelo treinamento da wake word
+
+O modelo personalizado **`juvehnal.tflite`**, utilizado para reconhecer a palavra de ativação “Juvenal”, foi obtido com a ajuda do projeto open source **[Tater Wake Words](https://github.com/TaterTotterson/Tater-Wake-Words)**, mantido por **[TaterTotterson](https://github.com/TaterTotterson)**.
+
+O projeto disponibiliza modelos de wake word para a comunidade e permite solicitar o treinamento de novas palavras por meio de issues no GitHub, com um processo automatizado de geração e publicação dos artefatos. No caso do Juvenal, o modelo personalizado foi disponibilizado gratuitamente, sem exigir uma infraestrutura própria de treinamento.
+
+**Muito obrigado ao TaterTotterson e aos colaboradores por disponibilizarem esse trabalho à comunidade!**
+
+> **Distinção técnica:** o Tater Wake Words é creditado pelo processo de solicitação/treinamento e disponibilização do modelo personalizado. O reconhecimento em tempo de execução no ESP32-S3 utiliza o componente MicroWakeWord-IDF, listado abaixo. São contribuições diferentes e complementares.
+
 ## Links e atribuições
 
 - [ESP-IDF](https://github.com/espressif/esp-idf) — framework de desenvolvimento.
 - [MicroWakeWord-IDF](https://github.com/bibidentuhanoi/MicroWakeWord-IDF) — componente de terceiros (GPLv3, com alterações locais); **não omitir seu código-fonte nem a licença**.
+- [Tater Wake Words — TaterTotterson](https://github.com/TaterTotterson/Tater-Wake-Words) — projeto open source utilizado para obter o modelo personalizado da palavra “Juvenal”; catálogo e solicitações de treinamento de wake words.
 - [Modelo de referência `juvehnal`](https://github.com/antonio-abrantes/microWakeWords) — arquivos TFLite e metadados.
 
-**Licenciamento:** este firmware inclui/integra código de terceiros sob GPLv3. Antes de publicar ou distribuir o firmware completo, consulte [dependências e licenças](docs/09-dependencias-e-licencas.md) e escolha uma licença de projeto compatível. O kit não atribui automaticamente uma licença ao código próprio.
+**Licenciamento:** este firmware inclui/integra código de terceiros sob GPLv3. Antes de publicar ou distribuir o firmware completo, consulte [dependências e licenças](docs/09-dependencias-e-licencas.md) e escolha uma licença de projeto compatível. O Tater Wake Words publica seu código original e os artefatos próprios sob MIT, ressalvando licenças de componentes e modelos de terceiros. O kit não atribui automaticamente uma licença ao código próprio.
