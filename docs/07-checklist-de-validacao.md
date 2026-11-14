@@ -54,10 +54,20 @@ O log de referência incluiu vários ciclos de detecção e animação no mesmo 
 - [ ] Testar detecção em diferentes distâncias/níveis de ruído.
 - [ ] Medir consumo de CPU e memória em execução por período prolongado.
 - [ ] Testar recuperação de falhas de I2S e perdas de alimentação.
-- [ ] Implementar e validar rede/WebSocket; design do protocolo ainda pendente.
-- [ ] Implementar áudio de saída e LED azul conforme estado real do servidor.
+- [x] Usuário forneceu boot ESP-IDF5.4.4 e três sessões WS v1 completas; uma entrada de6,46s comprova streaming além do antigo limite.
+- [x] MAX98357A/alto-falante montados, GPIO15/16/17, USB5V/GND comum e áudio isolado confirmados pelo usuário no ESP-IDF5.4.4, projeto juvenal_audio_teste.
+- [x] Três respostas PCM16 por WS com playback confirmado/entrega delivered e nova wake nos logs.
+- [ ] Validar recuperação/queda/cancelamento/overflow, contexto e qualidade acústica; a evidência de três sessões não cobre todos esses cenários.
+- [ ] Compilar/gravar revisão posterior: boot amarelo piscando, verde2s, vermelho em falha e recuperação sem confundir pausa da wake.
+- [ ] Conferir painel autenticado, volume0/baixo/100 durante áudio e persistência após status salvo/reboot.
+- [ ] Conferir boca pelo PCM efetivamente reproduzido: fortes/fracos/silêncios, mute, término e cancelamento, sem travar I2S/WS/LVGL.
+- [ ] Confirmar ausência do erro de close redundante após session.end na revisão nova.
 - [ ] Definir partições para OTA se essa função for adicionada.
 
 ## Como reproduzir a validação
 
 Com o firmware compilado e gravado, abrir o monitor serial, verificar inicialização da PSRAM e do detector, pronunciar “Juvenal” e observar no mesmo ciclo: **mensagem de detecção -> três piscadas verdes -> amarelo permanente**. Registrar se a palavra foi pronunciada intencionalmente, para diferenciar detecções legítimas de falsos positivos.
+
+## Integração posterior — 13/11/2026
+
+A evidência acima permanece exclusiva da v0.1.0. A fase 03 acrescenta código WS v1, painel/face, WAV diagnóstico e TX opcional. Nenhum item funcional novo foi aprovado pelo agente. Consulte [os critérios atuais](10-integracao-servidor-ws.md#pontos-de-aceite-manual); não transferir automaticamente a validação parcial da Visual v0.4 experimental para o principal.

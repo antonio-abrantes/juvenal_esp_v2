@@ -1,124 +1,87 @@
-﻿#include <stdint.h>
-#include <stdbool.h>
-
+/* Unico dono do WS2812. Boot independente de LCD/LVGL/Wi-Fi. */
 #include "juvenal_led.h"
 #include "led_strip.h"
 #include "led_strip_rmt.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_log.h"
-
-#define LED_GPIO 48
-#define LED_COUNT 1
-#define WAKE_COOLDOWN_MS 4000
-
-static const char *TAG = "JUVENAL_LED";
-static led_strip_handle_t led = NULL;
-static TaskHandle_t led_task_handle = NULL;
-
-static TickType_t last_detection = 0;
-static bool has_detection = false;
-
-static esp_err_t set_color(uint8_t r, uint8_t g, uint8_t b)
+#include <stddef.h>
+static led_strip_handle_t s_strip;
+static portMUX_TYPE s_mux = portMUX_INITIALIZER_UNLOCKED;
+static juvenal_led_state_t s_state = JUVENAL_LED_BOOTING;
+static TickType_t s_since;
+static uint32_t s_color = 0x2b1600;
+static void led_task(void *unused)
 {
-    esp_err_t err = led_strip_set_pixel(led, 0, r, g, b);
-
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    return led_strip_refresh(led);
-}
-
-static void led_task(void *arg)
-{
-    while (true) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-        ESP_LOGI(TAG, "Wake word: 3 piscadas verdes");
-
-        for (int i = 0; i < 3; i++) {
-            ESP_ERROR_CHECK(set_color(0, 28, 0));
-            vTaskDelay(pdMS_TO_TICKS(180));
-
-            ESP_ERROR_CHECK(led_strip_clear(led));
-            vTaskDelay(pdMS_TO_TICKS(150));
+    (void)unused;
+    uint32_t previous = UINT32_MAX;
+    while (1) {
+        TickType_t now = xTaskGetTickCount();
+        portENTER_CRITICAL(&s_mux);
+        juvenal_led_state_t state = s_state;
+        TickType_t elapsed = now - s_since;
+        if (state == JUVENAL_LED_BOOT_OK && elapsed >= pdMS_TO_TICKS(2000))
+            state = s_state = JUVENAL_LED_NORMAL;
+        uint32_t color = s_color;
+        portEXIT_CRITICAL(&s_mux);
+        if (state == JUVENAL_LED_BOOTING)
+            color = ((elapsed / pdMS_TO_TICKS(350)) % 2) ? 0 : 0x2b1600;
+        else if (state == JUVENAL_LED_BOOT_ERROR)
+            color = ((elapsed / pdMS_TO_TICKS(250)) % 2) ? 0 : 0x340000;
+        else if (state == JUVENAL_LED_BOOT_OK) color = 0x002e08;
+        if (color != previous) {
+            esp_err_t err = led_strip_set_pixel(s_strip, 0, color >> 16,
+                                                (color >> 8) & 255, color & 255);
+            if (err == ESP_OK) err = led_strip_refresh(s_strip);
+            if (err == ESP_OK) previous = color;
         }
-
-        ESP_ERROR_CHECK(set_color(20, 14, 0));
-
-        ESP_LOGI(TAG, "Aguardando: LED amarelo");
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
-
 esp_err_t juvenal_led_init(void)
 {
-    led_strip_config_t strip_cfg = {
-        .strip_gpio_num = LED_GPIO,
-        .max_leds = LED_COUNT,
-        .led_model = LED_MODEL_WS2812,
-        .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB
+    if (s_strip) return ESP_ERR_INVALID_STATE;
+    const led_strip_config_t strip = {
+        .strip_gpio_num = 48, .max_leds = 1, .led_model = LED_MODEL_WS2812,
+        .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
     };
-
-    led_strip_rmt_config_t rmt_cfg = {
-        .clk_src = RMT_CLK_SRC_DEFAULT,
-        .resolution_hz = 10000000,
-        .mem_block_symbols = 64,
-        .flags = {
-            .with_dma = false
-        }
+    const led_strip_rmt_config_t rmt = {
+        .clk_src = RMT_CLK_SRC_DEFAULT, .resolution_hz = 10000000,
+        .mem_block_symbols = 64, .flags = {.with_dma = false},
     };
-
-    esp_err_t err = led_strip_new_rmt_device(
-        &strip_cfg, &rmt_cfg, &led
-    );
-
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    err = set_color(20, 14, 0);
-
-    if (err != ESP_OK) {
-        led_strip_del(led);
-        led = NULL;
-        return err;
-    }
-
-    if (xTaskCreate(
-        led_task,
-        "juvenal_led",
-        3072,
-        NULL,
-        3,
-        &led_task_handle
-    ) != pdPASS) {
-        led_strip_del(led);
-        led = NULL;
+    esp_err_t err = led_strip_new_rmt_device(&strip, &rmt, &s_strip);
+    if (err != ESP_OK) return err;
+    s_since = xTaskGetTickCount();
+    if (xTaskCreate(led_task, "juvenal_led", 3072, NULL, 3, NULL) != pdPASS) {
+        led_strip_del(s_strip); s_strip = NULL;
         return ESP_ERR_NO_MEM;
     }
-
-    ESP_LOGI(TAG, "LED pronto: amarelo aguardando");
-
     return ESP_OK;
 }
-
-void juvenal_led_wake_detected(void)
+void juvenal_led_set_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
-    if (led_task_handle == NULL) {
-        return;
+    portENTER_CRITICAL(&s_mux);
+    s_color = ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+    portEXIT_CRITICAL(&s_mux);
+}
+void juvenal_led_set_state(juvenal_led_state_t state)
+{
+    portENTER_CRITICAL(&s_mux);
+    if (s_state != state) { s_state = state; s_since = xTaskGetTickCount(); }
+    portEXIT_CRITICAL(&s_mux);
+}
+juvenal_led_state_t juvenal_led_get_state(void)
+{
+    portENTER_CRITICAL(&s_mux);
+    juvenal_led_state_t state = s_state;
+    portEXIT_CRITICAL(&s_mux);
+    return state;
+}
+const char *juvenal_led_state_name(void)
+{
+    switch (juvenal_led_get_state()) {
+        case JUVENAL_LED_BOOTING: return "starting";
+        case JUVENAL_LED_BOOT_ERROR: return "error";
+        case JUVENAL_LED_BOOT_OK: return "ready";
+        default: return "normal";
     }
-
-    TickType_t now = xTaskGetTickCount();
-
-    if (has_detection &&
-        (TickType_t)(now - last_detection) <
-            pdMS_TO_TICKS(WAKE_COOLDOWN_MS)) {
-        return;
-    }
-
-    last_detection = now;
-    has_detection = true;
-
-    xTaskNotifyGive(led_task_handle);
 }

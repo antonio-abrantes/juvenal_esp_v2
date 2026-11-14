@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Juvenal — Painel local</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,sans-serif;background:#08151d;color:#d8f8f3}
+*{box-sizing:border-box}body{margin:0;padding:26px 14px}.wrap{max-width:720px;margin:auto}
+header{margin-bottom:25px}h1{letter-spacing:-1px;font-size:2rem;margin:0}small,p{color:#a1c8cd}h2{font-size:1.12rem;margin:0 0 14px}
+.card{border:1px solid #214858;background:#0c202a;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 20px #0002}
+label{display:block;margin:10px 0 8px;color:#b9d9df;font-size:.95rem}input{width:100%;padding:13px;background:#08151d;border:1px solid #356072;border-radius:9px;color:#eef;font-size:1rem}
+button{padding:12px 17px;border:0;border-radius:10px;background:#33d6c6;color:#062229;font-weight:750;cursor:pointer;font-size:.92rem;margin:5px 5px 5px 0}
+button.secondary{background:#254652;color:#e8f9fb}button.danger{background:#783444;color:white}button:disabled{opacity:.35;cursor:not-allowed}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}audio{width:100%;margin-top:12px}#status{font-variant-numeric:tabular-nums;color:#8edbd0}
+#notice{min-height:25px;white-space:pre-wrap;overflow-wrap:anywhere;color:#aee7c9}
+.details{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}.details>div{background:#102c36;border:1px solid #214858;border-radius:10px;padding:11px}.details strong{display:block;font-size:.83rem;color:#92c5c8;margin-bottom:4px}.details span{font-size:.95rem;font-variant-numeric:tabular-nums;word-break:break-word}
+.pill{border:1px solid #295667;padding:5px 9px;border-radius:99px;font-size:.8rem;color:#c3e6e3}
+</style>
+</head>
+<body><div class="wrap">
+<header><h1>Juvenal <span style="color:#38ddcf">●</span></h1><p>Configuração e diagnóstico de áudio · Painel disponível apenas na rede local</p></header>
+<section class="card"><h2>Webhook WAV de diagnóstico</h2><p id="transport">Transporte automático configurado no firmware.</p><label for="url">Destino do POST manual/legado (WAV binário)</label>
+<input id="url" type="url" maxlength="255" spellcheck="false" placeholder="https://exemplo.com/webhook/esp_command">
+<div class="row"><button id="save">Salvar webhook</button><span class="pill">X-API-Key: mantida no firmware</span></div>
+<p>O destino salvo fica na NVS e permanece após reiniciar o ESP32.</p></section>
+<section class="card"><h2>Volume do alto-falante</h2>
+<label for="volume">Saída no ESP32: <output id="volumeValue" for="volume">100%</output></label>
+<input id="volume" type="range" min="0" max="100" step="1" value="100">
+<div class="row"><button id="applyVolume">Aplicar volume</button><span id="volumeSaved" class="pill">Consultando...</span></div>
+<p>0% silencia o MAX98357A; 100% mantém o nível original. O ajuste atua somente na saída do ESP32. É aplicado durante a reprodução e salvo após a interação, sem escrever na flash enquanto o áudio toca.</p></section>
+<section class="card"><h2>Teste do microfone</h2><p>Grave até 6 segundos, pare antes se quiser, ouça no navegador e envie o mesmo WAV para o webhook configurado.</p>
+<div class="row"><button id="start">● Gravar</button><button id="stop" class="secondary" disabled>■ Parar</button><span id="status">Consultando...</span></div>
+<audio id="player" controls preload="none" style="display:none"></audio>
+<div class="row"><button id="preview" class="secondary" disabled>Ouvir gravação</button><button id="download" class="secondary" disabled>Salvar WAV</button><button id="send" disabled>Enviar WAV</button><button id="clear" class="danger" disabled>Descartar / liberar Juvenal</button></div>
+<p>Durante o teste, a wake word fica temporariamente suspensa. Ao terminar, descarte a gravação para retomar a escuta normal.</p><div class="details" aria-label="Diagnosticos">
+<div><strong>Inicialização</strong><span id="bootStatus">Consultando...</span></div>
+<div><strong>Wi-Fi</strong><span id="wifiStatus">Consultando...</span></div>
+<div><strong>Microfone</strong><span id="micStatus">-</span></div>
+<div><strong>WAV</strong><span id="wavStatus">-</span></div>
+<div><strong>Ultimo POST</strong><span id="postStatus">-</span></div>
+<div><strong>HTTP / duracao</strong><span id="httpStatus">-</span></div>
+<div><strong>Motivo da falha</strong><span id="postError">-</span></div>
+<div><strong>Sessão WS</strong><span id="wsStatus">-</span></div>
+<div><strong>Diagnóstico WS</strong><span id="wsError">-</span></div>
+</div>
+<p><small>Os valores de diagnostico ficam somente na memoria do dispositivo. Nenhuma senha, URL ou amostra de audio e exibida.</small></p>
+</section>
+<section class="card"><h2>Resultado</h2><div id="notice" role="status" aria-live="polite">Painel conectado.</div></section>
+<p><small>Segurança: HTTP Basic protege o acesso, mas não cifra a senha. Use somente em uma rede Wi-Fi confiável, sem redirecionamento de porta ou túnel público.</small></p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let volumeDirty=false, volumeSaving=false;
+let phase='idle', lastBlobUrl=null, busy=false, polling=false, lastPostSequence=null;
+const api=async(path,method='GET',data=null)=>{
+ const opt={method,cache:'no-store',headers:{'X-Juvenal-UI':'1'}};
+ if(data!==null){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(data)}
+ const r=await fetch(path,opt);const body=await r.text();let json={};
+ try{json=JSON.parse(body)}catch{json={message:body.slice(0,250)}}
+ if(!r.ok)throw Error(json.message||`HTTP ${r.status}`);
+ return json;
+};
+function note(t){$('notice').textContent=t}
+function controls(){
+ $('start').disabled=busy||phase!=='idle';$('stop').disabled=busy||phase!=='recording';
+ $('preview').disabled=busy||phase!=='ready';$('download').disabled=busy||phase!=='ready';$('send').disabled=busy||phase!=='ready';
+ $('clear').disabled=busy||phase!=='ready';$('save').disabled=busy;
+}
+async function poll(){
+ if(polling)return;
+ polling=true;
+ try{
+  const r=await api('/api/status');phase=r.phase;
+  $('status').textContent=`${({'idle':'Aguardando wake word','recording':'Gravando','ready':'Gravação pronta','sending':'Enviando','closing':'Liberando'})[phase]||phase} · ${Number(r.seconds||0).toFixed(2)}s`;
+  const bootNames={starting:'Inicializando',error:'Falha / aguardando recuperação',ready:'Pronto: confirmação verde',normal:'Inicializado'};
+  $('bootStatus').textContent=bootNames[r.boot_state]||r.boot_state||'-';
+  if(!volumeDirty&&!volumeSaving&&Number.isInteger(r.volume)){
+   $('volume').value=r.volume;$('volumeValue').textContent=r.volume+'%';
+  }
+  $('volumeSaved').textContent=volumeDirty?'Ajuste ainda não aplicado':r.volume_saved?'Salvo no ESP32':'Aplicado; aguardando salvar';
+  $('wifiStatus').textContent=r.wifi_connected?'Conectado':'Desconectado';
+  $('micStatus').textContent=`${r.capture_mode||'none'} · RMS ${r.rms||0}`;
+  $('wavStatus').textContent=`${r.samples||0} amostras · ${r.wav_bytes||0} bytes`;
+  const states={none:'Ainda sem envios',sending:'Em andamento',success:'Sucesso',failed:'Falhou'};
+  $('postStatus').textContent=states[r.last_post_result]||'-';
+  $('httpStatus').textContent=`HTTP ${r.last_http_status||0} · ${r.last_post_ms||0} ms · ${r.last_post_bytes||0} bytes`;
+  $('postError').textContent=r.last_post_error&&r.last_post_error!=='none'?r.last_post_error:'Nenhuma';
+  $('transport').textContent=r.auto_transport==='ws'?'Ativação por voz: servidor Juvenal via WS. Este formulário altera somente o webhook WAV.':'Ativação por voz: webhook WAV legado.';
+  $('wsStatus').textContent=r.ws_state||'idle';
+  $('wsError').textContent=r.ws_error||'Nenhuma';
+  if(r.ws_active)$('micStatus').textContent='wake_ws · RMS '+(r.ws_rms||0);
+  const seq=Number(r.last_post_sequence||0);
+  if(lastPostSequence===null){lastPostSequence=seq}
+  else if(lastPostSequence!==seq){
+   lastPostSequence=seq;
+   note(r.last_post_result==='success'
+    ?`POST concluído com sucesso: HTTP ${r.last_http_status} em ${r.last_post_ms} ms.`
+    :`POST falhou: ${r.last_post_error||'erro desconhecido'} (HTTP ${r.last_http_status||0}). WAV manual preservado.`);
+  }
+  controls();
+ }catch(e){$('status').textContent='Sem conexão: '+e.message}
+ finally{polling=false}
+}
+const act=async(path,data=null)=>{busy=true;controls();try{
+ const v=await api(path,'POST',data); note(v.message||'Operação concluída.');
+ if(path==='/api/record/clear'||path==='/api/record/start'){
+  if(lastBlobUrl){URL.revokeObjectURL(lastBlobUrl);lastBlobUrl=null}
+  $('player').removeAttribute('src');$('player').style.display='none';
+ }
+}catch(e){note('Erro: '+e.message)}finally{busy=false;await poll()}}
+$('volume').oninput=()=>{volumeDirty=true;$('volumeValue').textContent=$('volume').value+'%';$('volumeSaved').textContent='Ajuste ainda não aplicado'};
+$('applyVolume').onclick=async()=>{
+ if(volumeSaving)return;
+ const selected=Number($('volume').value);
+ volumeSaving=true;$('applyVolume').disabled=true;$('volume').disabled=true;
+ try{
+  const result=await api('/api/volume','POST',{volume:selected});
+  volumeDirty=false;note(result.message);
+ }catch(e){note('Falha ao ajustar volume: '+e.message)}
+ finally{volumeSaving=false;$('applyVolume').disabled=false;$('volume').disabled=false;await poll()}
+};
+$('save').onclick=()=>act('/api/config', {url:$('url').value.trim()});
+$('start').onclick=()=>act('/api/record/start');
+$('stop').onclick=()=>act('/api/record/stop');
+$('clear').onclick=()=>act('/api/record/clear');
+$('send').onclick=()=>act('/api/record/send');
+$('download').onclick=()=>{const a=document.createElement('a');a.href='/api/audio';a.download='juvenal_teste.wav';document.body.appendChild(a);a.click();a.remove();};
+$('preview').onclick=async()=>{busy=true;controls();try{
+ const r=await fetch('/api/audio',{cache:'no-store'});if(!r.ok)throw Error(`HTTP ${r.status}`);
+ const blob=await r.blob();if(lastBlobUrl)URL.revokeObjectURL(lastBlobUrl);
+ lastBlobUrl=URL.createObjectURL(blob);$('player').src=lastBlobUrl;$('player').style.display='block';
+ await $('player').play();note(`Reproduzindo ${blob.size} bytes no navegador.`);
+}catch(e){note('Falha ao reproduzir: '+e.message)}finally{busy=false;controls()}}
+async function init(){try{const cfg=await api('/api/config');$('url').value=cfg.url||''}catch(e){note(e.message)}await poll()}
+init();setInterval(()=>{if(!busy)poll()},500);
+</script></body></html>

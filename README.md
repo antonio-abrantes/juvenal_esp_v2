@@ -1,24 +1,43 @@
-# Juvenal ESP32-S3 — Wake Word Local
+# Juvenal ESP32-S3 — interface de voz
 
-**Versão de referência: v0.1.0 (marco funcional validado em hardware em 10/11/2026).**
+Firmware do assistente Juvenal para ESP32-S3 N16R8, com INMP441, MicroWakeWord local, face GC9A01/LVGL, painel e integração com o Juvenal Server. Projeto ESP-IDF **5.4.4**, repositório juvenal_esp_v2. A palavra pronunciada é Juvenal; juvehnal identifica o modelo fonético.
 
-Firmware independente para **ESP32-S3 N16R8** (16 MB Flash, 8 MB PSRAM), com microfone **INMP441 (I2S)**, detecção **local** da palavra de ativação **“Juvenal”** por **microWakeWord / TensorFlow Lite Micro** e LED RGB integrado **GPIO48**.
+## Servidor complementar — Juvenal Server
 
-> A palavra pronunciada é **Juvenal**. `juvehnal` é o identificador fonético usado nos arquivos do modelo e nos logs. Esta fase não depende de Home Assistant, ESPHome, nuvem nem conexão Wi-Fi.
+Este firmware se integra ao **[Juvenal Server — juvenal_esp_v2_server](https://github.com/antonio-abrantes/juvenal_esp_v2_server)**, o backend Python responsável pelo processamento da conversa.
 
-## O que funciona na v0.1.0
+O servidor recebe o áudio do ESP32 por WebSocket, transcreve a fala com faster-whisper, consulta o provedor de IA e mantém o contexto e a persona do Juvenal. Conforme a configuração, sintetiza a resposta com Piper e devolve PCM ao ESP32, reproduz no próprio servidor ou entrega texto a um endpoint HTTP. Também controla a continuidade da conversa e seu timeout de inatividade.
 
-| Recurso | Estado |
+Para usar o modo conversacional WebSocket/TTS, execute o servidor e configure sua URL e a credencial do dispositivo no firmware. O ESP32 cuida da wake word local, captura do microfone, reprodução I2S, tela e LED; o servidor cuida de STT, IA e TTS. Os projetos têm repositórios independentes; a pasta local do backend neste workspace é projects/juvenal_server.
+
+## Estado atual e evidências
+
+| Entrega | Situação |
 |---|---|
-| ESP32-S3 com Flash 16 MB e PSRAM octal 8 MB | **Validado na placa** |
-| Microfone INMP441 em 16 kHz, I2S | **Validado** |
-| Modelo `juvehnal.tflite` embarcado na Flash | **Validado** |
-| Detecção da wake word no próprio ESP32-S3 | **Validado** |
-| LED amarelo enquanto aguarda | **Validado** |
-| Três piscadas verdes na detecção; retorno ao amarelo | **Validado** |
-| Intervalo visual entre ativações: 4 s | **Implementado** |
-| LED azul na transmissão/processamento | **Reservado para fase futura** |
-| Wi-Fi, WebSocket, servidor, STT, TTS, alto-falante | **Ainda não implementados neste firmware** |
+| v0.1.0: boot, PSRAM, INMP441, modelo e wake/LED | Validação física histórica em 10/11/2026 |
+| Visual v0.4 do projeto separado juvenal_http_teste | Instalada, compilada e parcialmente validada pelo usuário; WAV/HTTP POST, sem WS/TTS/MAX98357A |
+| Integração da fase 03 neste principal | Usuário mostrou boot e três sessões completas no principal em 13/11; refinamentos posteriores de LED/volume/boca ainda sem build/aceite |
+| WS v1 sob demanda e PCM16 para o servidor | Três entradas por VAD/STT/IA e playback confirmado; primeira fala de6,46s demonstra reutilização do ring |
+| MAX98357A + alto-falante, GPIO15/16/17 | Conectados e funcionais em teste isolado ESP-IDF5.4.4 com som real; USB5V e GND comum |
+| Retorno PCM e driver MAX98357A | Três respostas com playback confirmado e retorno à espera; qualidade e cenários de falha ainda sem avaliação abrangente |
+| Painel/manual WAV herdados seletivamente da v0.4 | Portados/adaptados; regressão manual completa pendente |
+| Boot LED, volume e boca por PCM | Implementados nesta revisão; build/flash e validação real pendentes |
+
+A fase03 permanece ativa para os aceites restantes. Os logs mais recentes comprovam uso integrado após a correção do ring; não validam os refinamentos posteriores desta revisão. A Visualv0.4 experimental continua separada. AGENTS.md e os guias históricos da v0.1.0 registram a baseline; este README e o [guia de integração](docs/10-integracao-servidor-ws.md) descrevem o código corrente.
+
+## Fluxo implementado
+
+Na espera, MicroWakeWord reconhece Juvenal no próprio ESP e não há WS aberto. Wake reserva o estado, pausa inferência, sinaliza três verdes e abre uma conexão autenticada. PCM16 mono 16 kHz segue para STT/IA no servidor; azul durante transmissão/processamento. Após a resposta, a escuta reabre na mesma conexão; inatividade configurada exclusivamente no servidor, despedida ou erro encerra e retorna à wake. Queda não provoca replay/reconexão automática.
+
+O servidor seleciona um único destino: endpoint textual, áudio local ou PCM de retorno ao ESP. A primeira configuração preservou endpoint; o usuário posteriormente selecionou esp32 e desligou a captura local do Windows. O firmware privado habilita TX para a montagem validada. Áudio só retorna se o servidor selecionar esp32. O painel do ESP mantém gravação, escuta/download, descarte, envio manual WAV/HTTP e diagnósticos. A URL desse formulário é do webhook WAV de diagnóstico, não configura WS nem a saída textual do servidor. Uma mesma wake não envia pelos dois transportes.
+
+### Inicialização, painel e volume
+
+LED amarelo piscando ao iniciar/conectar; verde por cerca de2s quando recursos locais, primeiro PCM e Wi-Fi estiverem prontos; depois a lógica normal. Falhas detectáveis ficam em vermelho piscando, inclusive Wi-Fi perdido. A recuperação da rede repete a confirmação verde. O prazo de30s sinaliza falha de inicialização pendente e não limita captura de voz. O controlador do LED é independente do LCD/LVGL.
+
+No IP do último log, abra [o painel do ESP](http://192.168.100.50/), porta80, usando o usuário e a senha já definidos no header privado main/juvenal_web_credentials.h. Não colocar credenciais no HTML ou em documentos públicos. O painel do Python é outro serviço, na porta8000.
+
+O controle Volume do alto-falante permite0–100% (0=mudo;100=PCM original). Aplica durante reprodução e salva na NVS entre interações; aguarde a indicação Salvo no ESP32 antes de reiniciar para preservar o último ajuste. Não muda ganho do microfone. A boca usa o nível do PCM após volume, publicado quando o descritor DMA termina; LVGL atualiza localmente a cada50ms, sem chamada ao LLM. Silêncio/mute fecha a boca; término/cancelamento restaura a pose. Essas três novidades ainda dependem de conferência real na placa.
 
 ### Hardware e conexão rápida
 
@@ -33,82 +52,56 @@ Firmware independente para **ESP32-S3 N16R8** (16 MB Flash, 8 MB PSRAM), com mic
 
 **LED integrado:** WS2812/compatível endereçável, `GPIO48`. **Nunca alimentar o INMP441 em 5 V.** As cores identificam os fios *desta montagem*, não são um padrão de mercado. Veja [hardware e montagem](docs/02-hardware-e-ligacoes.md).
 
-## Clonar, compilar e testar
+## Configuração privada
 
-**Pré-requisitos:** ESP-IDF **v5.4.4**, ferramentas de compilação para ESP32-S3, Python e Git instalados pelo instalador oficial da Espressif (no Windows, VS Code + extensão ESP-IDF / Espressif Installation Manager).
+Copie main/juvenal_secrets.example.h para main/juvenal_secrets.h e main/juvenal_web_credentials.example.h para main/juvenal_web_credentials.h apenas se os arquivos locais ainda não existirem. Os dois arquivos reais são ignorados pelo repositório; nunca force sua inclusão. Exemplos públicos estão vazios/desativados.
 
-> O repositório remoto precisa ter sido criado e publicado para que o comando `git clone` funcione. A URL abaixo presume publicação no perfil `antonio-abrantes`.
+- Wi-Fi: JUVENAL_WIFI_SSID e JUVENAL_WIFI_PASSWORD.
+- Transporte: JUVENAL_AUTO_TRANSPORT_WS=true e JUVENAL_WS_URL=ws://IP_DO_SERVIDOR:8000/ws/esp.
+- Identidade/token: JUVENAL_WS_DEVICE_ID e JUVENAL_WS_DEVICE_TOKEN iguais a ESP_DEVICE_ID/TOKEN no .env privado do servidor.
+- Painel ESP: usuário/senha próprios; senha com pelo menos 12 caracteres. HTTP porta 80, somente rede privada protegida.
+- Diagnóstico WAV: JUVENAL_API_KEY e JUVENAL_WEBHOOK_URL próprios; o painel mantém override em NVS.
+- Speaker: GPIO15=BCLK, GPIO16=WS/LRC e GPIO17=DOUT/DIN. A montagem está validada e JUVENAL_SPEAKER_ENABLED=true no arquivo privado local; o exemplo público mantém ativação explícita false. MAX98357A recebe USB5V/GND comum, GAIN/SD soltos e SPK- nunca no GND.
 
-```powershell
-git clone https://github.com/antonio-abrantes/juvenal_esp_v2.git
-cd juvenal_esp_v2
-idf.py --version
-idf.py set-target esp32s3
+Se os arquivos privados já foram preparados neste workspace, preserve-os; confira apenas IP/porta se a rede mudar. O servidor precisa ser alcançável pelo ESP, sem localhost. WS sem TLS exige LAN protegida. WSS usa bundle de certificados e sincronização de relógio.
+
+## Build e flash pelo usuário
+
+Abra terminal com ESP-IDF **5.4.4** ativado. A estrutura CMake e o target esp32s3 foram mantidos; não é necessário trocar target/SDK a cada ciclo.
+
+~~~powershell
+Set-Location -LiteralPath 'C:\Projects\Juvenal_v2\projects\juvenal_esp'
 idf.py build
-python -m serial.tools.list_ports -v
 idf.py -p COM5 flash monitor
-```
+~~~
 
-**Troque `COM5` pela porta real da sua placa.** O exemplo `COM5` foi o dispositivo CH343 usado na validação de referência. Para encerrar o monitor serial: `Ctrl+]`.
+COM5 é a porta fornecida no teste recente; confira se reconectar a placa. Ctrl+] sai do monitor. Não executar erase-flash, fullclean ou set-target como rotina. O build prepara os artefatos; o flash substitui o firmware instalado e deve ser feito manualmente depois de revisar configuração e tabela de partições.
 
-O projeto traz **`sdkconfig.defaults`** com a configuração-base pública: Flash **DIO / 80 MHz / 16 MB** e PSRAM **octal / 40 MHz**. Em computadores novos, o `idf.py set-target esp32s3` gera um `sdkconfig` local; confira em `idf.py menuconfig` antes de gravar. **Não habilite modo octal para a Flash**: octal nesta montagem se refere à **PSRAM**, não à Flash.
+A Flash permanece DIO 80 MHz/16 MB e PSRAM octal 40 MHz/8 MB. A integração de rede/tela excede o espaço da antiga aplicação de 1 MiB: partitions.csv prepara factory de 4 MiB em 0x10000. NVS 0x9000/0x6000 e phy_init 0xf000/0x1000 mantêm offsets/tamanhos; nenhuma NVS é apagada automaticamente. O boot fornecido pelo usuário mostra aplicação carregada em factory4MiB; o tamanho da revisão nova precisa ser conferido no próximo build.
 
-**Saída esperada de reconhecimento:**
+main/idf_component.yml fixa led_strip 3.1.1, GC9A01 2.0.0, esp_lvgl_port 2.9.0, LVGL 9.4.0 e esp_websocket_client 1.8.0. O código exige ESP-IDF exatamente 5.4.4. A tentativa anterior de build pelo agente não concluiu a resolução por restrições Git/rede; o usuário posteriormente forneceu execução do principal compilado no ESP-IDF5.4.4. Os refinamentos desta rodada não mudam manifest nem lock. Revise/inclua o lock gerado pelo seu build junto ao código; preserve as dependências e patches MicroWakeWord. Não copiar managed_components de experimentos.
 
-```text
-I (...) micro_wake_word: Micro Wake Word initialized
-I (...) i2s_audio.microphone: Microphone started
-I (...) JUVENAL: Juvenal aguardando palavra-chave
-W (...) JUVENAL: WAKE WORD DETECTADA: juvehnal
-I (...) JUVENAL_LED: Wake word: 3 piscadas verdes
-I (...) JUVENAL_LED: Aguardando: LED amarelo
-```
+## Estrutura e operação
 
-Os `(...)` substituem tempos do monitor, que variam. A inicialização da biblioteca e a compilação foram confirmadas; **a taxa de falsos positivos ainda não foi medida sistematicamente**.
+| Arquivo/módulo | Responsabilidade |
+|---|---|
+| main/juvenal_main.cpp | Microfone/wake, estados atômicos, buffer compartilhado, Wi-Fi e diagnóstico WAV |
+| main/juvenal_ws.cpp/.h | Cliente v1, autenticação, captura/flow control, conexão por interação |
+| main/juvenal_speaker.cpp/.h | I2S_NUM_1 TX, ring de 16 KiB, créditos e confirmação depois do DMA |
+| main/juvenal_face_neutral.c/.h | GC9A01/LVGL, poses e boca pelo nível do PCM reproduzido |
+| main/juvenal_led.c/.h | Único proprietário do GPIO48/RMT; boot e cor normal publicada pela face |
+| main/juvenal_web.cpp/.h/.html | Painel Basic, gravação manual, POST assíncrono e status |
+| main/juvenal_config.h / exemplos | Configuração privada opcional e defaults sem segredos |
+| main/juvehnal.tflite | Modelo original embarcado por EMBED_FILES, 63.520 bytes |
+| components/micro_wake_word_idf | Captura I2S RX e modelo; quatro patches e licença preservados |
+| main/CMakeLists.txt | Registra fontes, modelo, HTML e dependências do firmware |
+| sdkconfig.defaults / partitions.csv | Referência N16R8 e tabela de aplicação ampliada |
 
-## Estrutura essencial do repositório
+juvenal_led.c/.h foi integrado ao build como único controlador físico do LED; não há duas tarefas disputando GPIO48. project() e binário podem continuar hello_world, nome histórico do exemplo ESP-IDF.
 
-```text
-juvenal_esp_v2/
-├── README.md
-├── AGENTS.md                    # Orientação para agentes e desenvolvedores
-├── .gitignore
-├── .gitattributes
-├── sdkconfig.defaults           # Configuração-base pública
-├── CMakeLists.txt               # Projeto ESP-IDF existente
-├── dependencies.lock            # Versões resolvidas (versionar se presente)
-├── main/
-│   ├── CMakeLists.txt
-│   ├── idf_component.yml
-│   ├── juvenal_main.cpp          # Microfone + detector + callback
-│   ├── juvenal_led.h
-│   ├── juvenal_led.c             # Estados do LED e tarefa FreeRTOS
-│   └── juvehnal.tflite           # Modelo necessário ao build (63.520 B)
-├── components/
-│   └── micro_wake_word_idf/      # Componente local COM correções de compatibilidade
-│       └── LICENSE.md           # Licença original GPLv3 — preservar
-├── models/
-│   └── juvehnal.json             # Metadados opcionais, manter se presente
-└── docs/
-    ├── README.md
-    ├── 01-visao-geral.md
-    ├── 02-hardware-e-ligacoes.md
-    ├── 03-preparacao-do-ambiente.md
-    ├── 04-testes-do-microfone-e-led.md
-    ├── 05-integracao-do-micro-wake-word.md
-    ├── 06-problemas-e-solucoes.md
-    ├── 07-checklist-de-validacao.md
-    ├── 08-versionamento-e-publicacao.md
-    └── 09-dependencias-e-licencas.md
-```
+MicroWakeWord permanece dono exclusivo do I2S_NUM_0 RX; subscribe compartilha áudio sem segundo capturador. O callback não faz rede/LVGL. O worker aplica HPF 80 Hz e ganho 1,6× uma única vez. A memória já reservada ao WAV é reutilizada no WS como ring produtor/consumidor: cada bloco enviado libera espaço para o próximo. Não há gravação WS limitada a seis segundos. O servidor encerra fala pelo VAD; limites configuráveis de proteção e falha real de rede/fila abortam sem processar comando truncado. O WAV de diagnóstico/legado mantém seu limite próprio.
 
-**Importante:** a documentação foi entregue separadamente como **kit complementar** para ser copiado à raiz do projeto **já existente e funcional**. O kit **não substitui** o código `main/`, o modelo `.tflite` nem o componente local corrigido. Eles devem permanecer na pasta do projeto e ser incluídos no primeiro commit.
-
-O binário ainda pode aparecer como `hello_world.bin` e o projeto como `hello_world` porque o projeto nasceu do exemplo oficial da Espressif. Isso é apenas nomenclatura histórica, **não impede o funcionamento da v0.1.0**.
-
-## Documentação detalhada
-
-Comece pelo [índice de documentação](docs/README.md): ambiente do zero, GPIOs, cores dos fios, procedimento de testes, configuração do TensorFlow, compatibilidade entre versões, solução dos erros reais e publicação no GitHub.
+Consulte o [guia WS/servidor e aceite manual](docs/10-integracao-servidor-ws.md), o [ambiente ESP-IDF](docs/03-preparacao-do-ambiente.md) e o [índice histórico](docs/README.md). Reprodução isolada e três respostas integradas por WS estão registradas pelo usuário; recuperação de falhas, refinamentos novos e aceite completo continuam pendentes. Veja [fiação completa](docs/02-hardware-e-ligacoes.md) e [restauração da v0.4](docs/10-integracao-servidor-ws.md#restaurar-o-firmware-visual-v04).
 
 ## Agradecimento pelo treinamento da wake word
 
@@ -128,3 +121,9 @@ O projeto disponibiliza modelos de wake word para a comunidade e permite solicit
 - [Modelo de referência `juvehnal`](https://github.com/antonio-abrantes/microWakeWords) — arquivos TFLite e metadados.
 
 **Licenciamento:** este firmware inclui/integra código de terceiros sob GPLv3. Antes de publicar ou distribuir o firmware completo, consulte [dependências e licenças](docs/09-dependencias-e-licencas.md) e escolha uma licença de projeto compatível. O Tater Wake Words publica seu código original e os artefatos próprios sob MIT, ressalvando licenças de componentes e modelos de terceiros. O kit não atribui automaticamente uma licença ao código próprio.
+
+## Continuidade e timeout do servidor
+
+A extensão de14/11/2026 mantém a conexão entre perguntas sem nova wake. O ESP informa input.ready e input.speech_started; o Python controla CONVERSATION_IDLE_TIMEOUT_SECONDS=10, cancela ao começar fala e rearma só após resposta e nova prontidão. STT/ferramentas/TTS não consomem essa contagem. O antigo teto total de180s do firmware foi removido.
+
+É necessária atualização inicial coordenada dos dois projetos. Depois dela, mudar de10 para20s exige somente editar o .env do Python e reiniciar o serviço: nenhum novo build/flash do ESP. Essa continuidade nova ainda precisa de aceite na placa; evidências anteriores de áudio/LED/boca não a validam automaticamente.

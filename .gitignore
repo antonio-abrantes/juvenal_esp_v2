@@ -72,5 +72,10 @@ certs/private/
 *.local
 
 # NOTE: manter versionados CMakeLists.txt, sdkconfig.defaults,
+# Headers privados e copias/variantes locais; apenas exemplos revisados sao publicos.
+/main/juvenal_secrets*
+/main/juvenal_web_credentials*
+!/main/juvenal_secrets.example.h
+!/main/juvenal_web_credentials.example.h
 # main/juvehnal.tflite, main/idf_component.yml, dependencies.lock,
 # components/micro_wake_word_idf/ com LICENSE.md e docs/.

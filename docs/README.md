@@ -1,6 +1,8 @@
-# Documentação — Juvenal ESP32-S3 v0.1.0
+# Documentação — Juvenal ESP32-S3
 
 Esta documentação descreve **o primeiro marco realmente testado na placa**: escuta contínua, wake word “Juvenal” reconhecida localmente e LED sinalizando a detecção com três piscadas verdes.
+
+**Código corrente:** fase 03 com integração WS/servidor e TX opcional, entregue sem build/flash/validação na placa. Leia primeiro o [guia de integração atual](10-integracao-servidor-ws.md). Os guias da v0.1.0 preservam evidência histórica, não o escopo inteiro do código novo.
 
 ## Roteiro de leitura
 
@@ -15,6 +17,8 @@ Esta documentação descreve **o primeiro marco realmente testado na placa**: es
 9. [Dependências, referências e licenças](09-dependencias-e-licencas.md) — origem do código e obrigações de distribuição.
 
 **Compatibilidade documentada:** ESP-IDF 5.4.4, ESP32-S3 N16R8, MicroWakeWord-IDF obtido de `bibidentuhanoi/MicroWakeWord-IDF` e adaptado localmente, `esp-tflite-micro` 1.4.3, `led_strip` 3.1.1, `esp-nn` 1.4.2. Alterar versões sem testes pode invalidar os patches.
+
+10. [Integração WS v1 e servidor](10-integracao-servidor-ws.md) — configuração privada, diagnóstico WAV, MAX98357A opcional, partições e aceite manual.
 
 ## Sobre a versão
 

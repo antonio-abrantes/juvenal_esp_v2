@@ -1,5 +1,7 @@
 # 01 — Visão geral e arquitetura
 
+**Referência histórica:** as seções abaixo descrevem a v0.1.0 comprovada. O código corrente recebeu a integração WS v1/face/painel e TX opcional na fase 03, ainda sem build ou validação integrada. Veja [o guia atual](10-integracao-servidor-ws.md).
+
 ## Objetivo
 
 Criar um assistente físico autônomo, **sem exigir Home Assistant ou ESPHome**, capaz de ouvir continuamente sua palavra-chave com inferência local no ESP32-S3 e, em etapas posteriores, conectar-se a um servidor próprio de voz.
