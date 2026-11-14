@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+<title id="title">Juvenal — como tudo se conecta</title>
+<desc id="desc">ESP32 detecta Juvenal, captura voz e reproduz áudio. Comunica-se com o servidor Python por WebSocket, enviando fala PCM16 e recebendo voz PCM16. O servidor transcreve, coordena o agente e sintetiza a resposta. Consulta o provedor de IA e executa chamadas HTTP às ferramentas opcionais, como Home Assistant. Visão do modo AUDIO_OUTPUT_MODE=esp32 e Home Assistant API.</desc>
+<rect x="0" y="0" width="900" height="900" rx="32" fill="#f6f9fd" stroke="#f6f9fd" stroke-width="0"/>
+<text x="450" y="60" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="43" font-weight="700" fill="#123c68">Juvenal: da voz à ação</text>
+<rect x="185" y="90" width="530" height="180" rx="26" fill="#e9f3ff" stroke="#9dc3eb" stroke-width="2"/>
+<rect x="220" y="125" width="88" height="104" rx="15" fill="#164e80" stroke="#164e80" stroke-width="0"/>
+<rect x="233" y="141" width="62" height="59" rx="12" fill="#f5fbff" stroke="#f5fbff" stroke-width="0"/>
+<circle cx="249" cy="162" r="5" fill="#164e80"/>
+<circle cx="279" cy="162" r="5" fill="#164e80"/>
+<path d="M 249 180 Q 264 192 279 180" fill="none" stroke="#164e80" stroke-width="4"/>
+<text x="495" y="145" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700" fill="#123c68">ESP32-S3</text>
+<text x="495" y="195" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="35" font-weight="400" fill="#203653">Ouve e fala</text>
+<text x="450" y="246" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="29" font-weight="400" fill="#203653">Wake word local · tela · alto-falante</text>
+<polyline points="275,270 275,395" fill="none" stroke="#2772be" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 266 382 L 275 395 L 284 382" fill="none" stroke="#2772be" stroke-width="5"/>
+<polyline points="625,395 625,270" fill="none" stroke="#18866e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 616 283 L 625 270 L 634 283" fill="none" stroke="#18866e" stroke-width="5"/>
+<text x="171" y="329" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="600" fill="#2772be">Fala</text>
+<text x="731" y="329" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="600" fill="#18866e">Voz</text>
+<text x="450" y="325" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="600" fill="#284a70">WebSocket</text>
+<text x="450" y="363" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#536d86">Áudio PCM16</text>
+<rect x="120" y="400" width="660" height="190" rx="26" fill="#ffffff" stroke="#9dc3eb" stroke-width="2"/>
+<text x="450" y="452" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700" fill="#123c68">Servidor Python</text>
+<text x="450" y="500" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="400" fill="#203653">Transcreve → agente → sintetiza</text>
+<text x="450" y="548" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="29" font-weight="400" fill="#536d86">STT · contexto · ferramentas · TTS</text>
+<polyline points="265,590 265,692" fill="none" stroke="#2772be" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 256 679 L 265 692 L 274 679" fill="none" stroke="#2772be" stroke-width="5"/>
+<polyline points="305,692 305,590" fill="none" stroke="#18866e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 296 603 L 305 590 L 314 603" fill="none" stroke="#18866e" stroke-width="5"/>
+<polyline points="595,590 595,692" fill="none" stroke="#2772be" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 586 679 L 595 692 L 604 679" fill="none" stroke="#2772be" stroke-width="5"/>
+<polyline points="635,692 635,590" fill="none" stroke="#18866e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 626 603 L 635 590 L 644 603" fill="none" stroke="#18866e" stroke-width="5"/>
+<text x="155" y="638" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#2772be">Texto</text>
+<text x="744" y="638" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#2772be">HTTP</text>
+<rect x="55" y="700" width="365" height="142" rx="23" fill="#edf0ff" stroke="#c1c8ed" stroke-width="2"/>
+<text x="237" y="751" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#343e7b">IA / LLM</text>
+<text x="237" y="797" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#203653">Respostas e decisões</text>
+<rect x="480" y="700" width="365" height="142" rx="23" fill="#eaf7f1" stroke="#a6d5c1" stroke-width="2"/>
+<text x="662" y="749" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="37" font-weight="700" fill="#205c4c">Ferramentas</text>
+<text x="662" y="788" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="29" font-weight="400" fill="#203653">Home Assistant</text>
+<text x="662" y="821" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#486d61">Opcional · ações e resultado</text>
+<text x="450" y="882" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#536d86">Modo ilustrado: voz no ESP + API do Home Assistant</text>
+</svg>

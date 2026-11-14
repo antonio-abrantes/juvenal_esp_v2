@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 2400 1600" role="img" aria-labelledby="title desc">
+<title id="title">Juvenal — esquema elétrico funcional de ligações</title>
+<desc id="desc">ESP32-S3 N16R8. INMP441: VDD 3V3, GND e L/R ao GND, SCK GPIO12, SD GPIO10, WS GPIO11. GC9A01: VCC 3V3, GND, SCL GPIO14, SDA GPIO13, DC GPIO9, CS GPIO8, RST GPIO7. MAX98357A: BCLK GPIO15, LRC GPIO16, DIN GPIO17, VIN em USB 5 V externa, GND comum ao ESP, GAIN e SD sem ligação. SPK+ e SPK- ligados somente aos terminais do alto-falante, saída diferencial. ESP alimentado por sua USB; positivos das fontes separados. GPIO48 é o LED integrado. Não representa a ordem física dos conectores.</desc>
+<defs><linearGradient id="header" x2="1" y2="0"><stop stop-color="#075c94"/><stop offset="1" stop-color="#073c70"/></linearGradient><radialGradient id="cone"><stop stop-color="#485365"/><stop offset=".5" stop-color="#1e2633"/><stop offset="1" stop-color="#080f18"/></radialGradient></defs>
+<rect width="2400" height="1600" fill="#ffffff"/>
+<rect x="70" y="35" width="2260" height="88" rx="30" fill="url(#header)" stroke="none" stroke-width="3"/>
+<text x="1200" y="96" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="48" font-weight="750" text-anchor="middle">Juvenal — Esquema de Ligações</text>
+<text x="1200" y="145" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="500" text-anchor="middle">ESP32-S3 N16R8  •  ligações conferidas no firmware ESP-IDF 5.4.4</text>
+<rect x="70" y="230" width="360" height="440" rx="23" fill="#f8fbff" stroke="#073c70" stroke-width="3"/>
+<rect x="70" y="230" width="360" height="55" rx="22" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="71" y="257" width="358" height="28" fill="url(#header)"/>
+<text x="250" y="268" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle">INMP441  ·  I2S RX</text>
+<rect x="1350" y="230" width="480" height="490" rx="23" fill="#f8fbff" stroke="#073c70" stroke-width="3"/>
+<rect x="1350" y="230" width="480" height="55" rx="22" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="1351" y="257" width="478" height="28" fill="url(#header)"/>
+<text x="1590" y="268" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle">GC9A01 1,28″  ·  SPI</text>
+<rect x="1350" y="780" width="480" height="540" rx="23" fill="#f8fbff" stroke="#073c70" stroke-width="3"/>
+<rect x="1350" y="780" width="480" height="55" rx="22" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="1351" y="807" width="478" height="28" fill="url(#header)"/>
+<text x="1590" y="818" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle">MAX98357A  ·  I2S TX</text>
+<rect x="1980" y="800" width="330" height="325" rx="23" fill="#f8fbff" stroke="#073c70" stroke-width="3"/>
+<rect x="1980" y="800" width="330" height="55" rx="22" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="1981" y="827" width="328" height="28" fill="url(#header)"/>
+<text x="2145" y="838" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle">Alto-falante</text>
+<rect x="70" y="1080" width="360" height="260" rx="23" fill="#f8fbff" stroke="#073c70" stroke-width="3"/>
+<rect x="70" y="1080" width="360" height="55" rx="22" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="71" y="1107" width="358" height="28" fill="url(#header)"/>
+<text x="250" y="1118" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle">USB 5 V  ·  amplificador</text>
+<rect x="700" y="240" width="400" height="810" rx="26" fill="#f2f7fc" stroke="#073c70" stroke-width="3"/>
+<rect x="700" y="240" width="400" height="55" rx="24" fill="url(#header)" stroke="none" stroke-width="3"/>
+<rect x="701" y="268" width="398" height="27" fill="url(#header)"/>
+<text x="900" y="278" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="29" font-weight="750" text-anchor="middle">ESP32-S3 N16R8</text>
+<text x="900" y="316" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="500" text-anchor="middle">Bornes lógicos identificados pelo nome</text>
+<rect x="775" y="160" width="250" height="48" rx="12" fill="#f3f6fa" stroke="#64748b" stroke-width="2"/>
+<rect x="792" y="174" width="37" height="20" rx="7" fill="#64748b" stroke="none" stroke-width="3"/>
+<rect x="801" y="180" width="19" height="8" rx="2" fill="#e7edf6" stroke="none" stroke-width="1"/>
+<text x="846" y="191" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="650" text-anchor="start">USB do ESP</text>
+<polyline points="900,208 900,240" fill="none" stroke="#64748b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="USB-ESP" data-from="USB_ESP" data-to="ESP.USB"/>
+<polyline points="700,333 430,333" fill="none" stroke="#dc2626" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="3V3-MIC" data-from="ESP.3V3" data-to="MIC.VDD"/>
+<polyline points="700,388 430,388" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="GND-MIC" data-from="ESP.GND" data-to="MIC.GND"/>
+<polyline points="430,443 590,443 590,388" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="GND-LR" data-from="MIC.L/R" data-to="ESP.GND"/>
+<circle cx="590" cy="388" r="8" fill="#111827" stroke="none" stroke-width="2"/>
+<polyline points="700,498 430,498" fill="none" stroke="#e46d16" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="MIC-BCLK" data-from="ESP.GPIO12" data-to="MIC.SCK"/>
+<polyline points="430,553 700,553" fill="none" stroke="#16813b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="MIC-DATA" data-from="MIC.SD" data-to="ESP.GPIO10"/>
+<polyline points="700,608 430,608" fill="none" stroke="#c99500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="MIC-WS" data-from="ESP.GPIO11" data-to="MIC.WS"/>
+<circle cx="430" cy="333" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="406" y="341" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">VDD</text>
+<circle cx="430" cy="388" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="406" y="396" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GND</text>
+<circle cx="430" cy="443" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="406" y="451" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">L/R</text>
+<circle cx="430" cy="498" r="7" fill="#fff" stroke="#e46d16" stroke-width="3"/>
+<text x="406" y="506" fill="#e46d16" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">SCK / BCLK</text>
+<circle cx="430" cy="553" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="406" y="561" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">SD / DOUT</text>
+<circle cx="430" cy="608" r="7" fill="#fff" stroke="#c99500" stroke-width="3"/>
+<text x="406" y="616" fill="#c99500" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">WS / LRCLK</text>
+<circle cx="700" cy="333" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="724" y="341" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">3V3</text>
+<circle cx="700" cy="388" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="724" y="396" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GND</text>
+<circle cx="700" cy="498" r="7" fill="#fff" stroke="#e46d16" stroke-width="3"/>
+<text x="724" y="506" fill="#e46d16" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GPIO12</text>
+<circle cx="700" cy="553" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="724" y="561" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GPIO10</text>
+<circle cx="700" cy="608" r="7" fill="#fff" stroke="#c99500" stroke-width="3"/>
+<text x="724" y="616" fill="#c99500" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GPIO11</text>
+<circle cx="166" cy="408" r="63" fill="#0c2137" stroke="#07669e" stroke-width="6"/>
+<circle cx="166" cy="408" r="51" fill="#263b4f" stroke="#51667b" stroke-width="2"/>
+<circle cx="143" cy="374" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="374" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="374" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="374" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="374" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="132" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="198" cy="385" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="132" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="198" cy="396" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="132" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="198" cy="407" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="132" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="198" cy="418" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="132" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="198" cy="429" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="143" cy="440" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="154" cy="440" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="165" cy="440" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="176" cy="440" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<circle cx="187" cy="440" r="1.8" fill="#91a4b8" stroke="none" stroke-width="2"/>
+<text x="166" y="505" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">MIC</text>
+<text x="166" y="533" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="500" text-anchor="middle">3,3 V</text>
+<text x="245" y="650" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="500" text-anchor="middle">L/R aterrado → canal esquerdo</text>
+<polyline points="1100,333 1350,333" fill="none" stroke="#dc2626" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-VCC" data-from="ESP.3V3" data-to="LCD.VCC"/>
+<circle cx="1100" cy="333" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="1076" y="341" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">3V3</text>
+<circle cx="1350" cy="333" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="1374" y="341" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">VCC</text>
+<polyline points="1100,388 1350,388" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-GND" data-from="ESP.GND" data-to="LCD.GND"/>
+<circle cx="1100" cy="388" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="1076" y="396" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GND</text>
+<circle cx="1350" cy="388" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="1374" y="396" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GND</text>
+<polyline points="1100,443 1350,443" fill="none" stroke="#c99500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-SCL" data-from="ESP.GPIO14" data-to="LCD.SCL"/>
+<circle cx="1100" cy="443" r="7" fill="#fff" stroke="#c99500" stroke-width="3"/>
+<text x="1076" y="451" fill="#c99500" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO14</text>
+<circle cx="1350" cy="443" r="7" fill="#fff" stroke="#c99500" stroke-width="3"/>
+<text x="1374" y="451" fill="#c99500" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">SCL / SCLK</text>
+<polyline points="1100,498 1350,498" fill="none" stroke="#16813b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-SDA" data-from="ESP.GPIO13" data-to="LCD.SDA"/>
+<circle cx="1100" cy="498" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="1076" y="506" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO13</text>
+<circle cx="1350" cy="498" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="1374" y="506" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">SDA / MOSI</text>
+<polyline points="1100,553 1350,553" fill="none" stroke="#2563eb" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-DC" data-from="ESP.GPIO9" data-to="LCD.DC"/>
+<circle cx="1100" cy="553" r="7" fill="#fff" stroke="#2563eb" stroke-width="3"/>
+<text x="1076" y="561" fill="#2563eb" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO9</text>
+<circle cx="1350" cy="553" r="7" fill="#fff" stroke="#2563eb" stroke-width="3"/>
+<text x="1374" y="561" fill="#2563eb" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">DC</text>
+<polyline points="1100,608 1350,608" fill="none" stroke="#7c3aed" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-CS" data-from="ESP.GPIO8" data-to="LCD.CS"/>
+<circle cx="1100" cy="608" r="7" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
+<text x="1076" y="616" fill="#7c3aed" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO8</text>
+<circle cx="1350" cy="608" r="7" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
+<text x="1374" y="616" fill="#7c3aed" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">CS</text>
+<polyline points="1100,663 1350,663" fill="none" stroke="#64748b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="LCD-RST" data-from="ESP.GPIO7" data-to="LCD.RST"/>
+<circle cx="1100" cy="663" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1076" y="671" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO7</text>
+<circle cx="1350" cy="663" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1374" y="671" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">RST</text>
+<circle cx="1665" cy="484" r="131" fill="#1f2e41" stroke="#64748b" stroke-width="4"/>
+<circle cx="1665" cy="484" r="119" fill="#081522" stroke="#07111b" stroke-width="3"/>
+<rect x="1596" y="451" width="42" height="21" rx="10" fill="#47c5e8" stroke="none" stroke-width="3"/>
+<rect x="1692" y="451" width="42" height="21" rx="10" fill="#47c5e8" stroke="none" stroke-width="3"/>
+<path d="M1626 524 Q1665 553 1704 524" fill="none" stroke="#47c5e8" stroke-width="7" stroke-linecap="round"/>
+<text x="1665" y="694" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="500" text-anchor="middle">Alimentação: 3V3</text>
+<rect x="837" y="388" width="126" height="200" rx="12" fill="#cdd7e2" stroke="#7f91a5" stroke-width="3"/>
+<text x="900" y="460" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="750" text-anchor="middle">ESP32-S3</text>
+<text x="900" y="495" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="650" text-anchor="middle">N16R8</text>
+<text x="900" y="546" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="500" text-anchor="middle">16 MB Flash</text>
+<text x="900" y="569" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="500" text-anchor="middle">8 MB PSRAM</text>
+<circle cx="900" cy="738" r="22" fill="#1f354d" stroke="#64748b" stroke-width="2"/>
+<circle cx="891" cy="734" r="6" fill="#eab308" stroke="none" stroke-width="2"/>
+<circle cx="907" cy="734" r="6" fill="#22c55e" stroke="none" stroke-width="2"/>
+<circle cx="900" cy="748" r="6" fill="#38bdf8" stroke="none" stroke-width="2"/>
+<text x="900" y="786" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="650" text-anchor="middle">LED RGB integrado</text>
+<text x="900" y="818" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="500" text-anchor="middle">GPIO48 · sem fio externo</text>
+<polyline points="1100,870 1350,870" fill="none" stroke="#7c3aed" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="AMP-BCLK" data-from="ESP.GPIO15" data-to="AMP.BCLK"/>
+<circle cx="1100" cy="870" r="7" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
+<text x="1076" y="878" fill="#7c3aed" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO15</text>
+<circle cx="1350" cy="870" r="7" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
+<text x="1374" y="878" fill="#7c3aed" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">BCLK</text>
+<polyline points="1100,930 1350,930" fill="none" stroke="#16813b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="AMP-LRC" data-from="ESP.GPIO16" data-to="AMP.LRC"/>
+<circle cx="1100" cy="930" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="1076" y="938" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO16</text>
+<circle cx="1350" cy="930" r="7" fill="#fff" stroke="#16813b" stroke-width="3"/>
+<text x="1374" y="938" fill="#16813b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">LRC / WS</text>
+<polyline points="1100,990 1350,990" fill="none" stroke="#64748b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="AMP-DIN" data-from="ESP.GPIO17" data-to="AMP.DIN"/>
+<circle cx="1100" cy="990" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1076" y="998" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GPIO17</text>
+<circle cx="1350" cy="990" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1374" y="998" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">DIN</text>
+<polyline points="1350,1040 1275,1040" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<polyline points="1268,1033 1282,1047" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<polyline points="1268,1047 1282,1033" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="1350" cy="1040" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1374" y="1048" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GAIN</text>
+<text x="1251" y="1047" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="600" text-anchor="end">NC</text>
+<polyline points="1350,1090 1275,1090" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<polyline points="1268,1083 1282,1097" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<polyline points="1268,1097 1282,1083" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="1350" cy="1090" r="7" fill="#fff" stroke="#64748b" stroke-width="3"/>
+<text x="1374" y="1098" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">SD</text>
+<text x="1251" y="1097" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="600" text-anchor="end">NC</text>
+<rect x="1558" y="1041" width="177" height="156" rx="12" fill="#d7e2ed" stroke="#8ca0b4" stroke-width="3"/>
+<text x="1646" y="1095" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="750" text-anchor="middle">MAX98357A</text>
+<text x="1646" y="1130" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="500" text-anchor="middle">DAC + amplificador</text>
+<text x="1646" y="1162" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" text-anchor="middle">PCM via I2S</text>
+<text x="1590" y="1298" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="500" text-anchor="middle">GAIN e SD sem ligação</text>
+<polyline points="1830,900 1980,900" fill="none" stroke="#dc2626" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="SPK-POS" data-from="AMP.SPK+" data-to="SPK.+"/>
+<polyline points="1830,980 1980,980" fill="none" stroke="#405473" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="SPK-NEG" data-from="AMP.SPK-" data-to="SPK.-"/>
+<circle cx="1830" cy="900" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="1806" y="908" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">SPK+</text>
+<circle cx="1830" cy="980" r="7" fill="#fff" stroke="#405473" stroke-width="3"/>
+<text x="1806" y="988" fill="#405473" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">SPK−</text>
+<circle cx="1980" cy="900" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="2004" y="908" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">+</text>
+<circle cx="1980" cy="980" r="7" fill="#fff" stroke="#405473" stroke-width="3"/>
+<text x="2004" y="988" fill="#405473" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">−</text>
+<rect x="2092" y="882" width="192" height="155" rx="16" fill="#263242" stroke="#101c2b" stroke-width="3"/>
+<circle cx="2188" cy="960" r="66" fill="url(#cone)" stroke="#6c7786" stroke-width="3"/>
+<circle cx="2188" cy="960" r="29" fill="#1b2737" stroke="#657386" stroke-width="3"/>
+<circle cx="2106" cy="896" r="4" fill="#a6b2c3" stroke="none" stroke-width="2"/>
+<circle cx="2270" cy="896" r="4" fill="#a6b2c3" stroke="none" stroke-width="2"/>
+<circle cx="2106" cy="1023" r="4" fill="#a6b2c3" stroke="none" stroke-width="2"/>
+<circle cx="2270" cy="1023" r="4" fill="#a6b2c3" stroke="none" stroke-width="2"/>
+<text x="2145" y="1073" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="650" text-anchor="middle">Saída diferencial / BTL</text>
+<text x="2145" y="1105" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="750" text-anchor="middle">SPK− NÃO é GND</text>
+<polyline points="430,1180 1350,1180" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="GND-USB-AMP" data-from="USB_AMP.GND" data-to="AMP.GND"/>
+<polyline points="900,1050 900,1180" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="GND-ESP-COMUM" data-from="ESP.GND" data-to="USB_AMP.GND"/>
+<circle cx="900" cy="1180" r="9" fill="#111827" stroke="none" stroke-width="2"/>
+<circle cx="900" cy="1050" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="924" y="1058" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start"></text>
+<text x="900" y="1021" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="650" text-anchor="middle">GND comum</text>
+<polyline points="430,1260 1350,1260" fill="none" stroke="#dc2626" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-net="5V-AMP" data-from="USB_AMP.+5V" data-to="AMP.VIN"/>
+<circle cx="430" cy="1180" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="406" y="1188" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">GND</text>
+<circle cx="430" cy="1260" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="406" y="1268" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="end">+5 V</text>
+<circle cx="1350" cy="1180" r="7" fill="#fff" stroke="#111827" stroke-width="3"/>
+<text x="1374" y="1188" fill="#111827" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">GND</text>
+<circle cx="1350" cy="1260" r="7" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+<text x="1374" y="1268" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="650" text-anchor="start">VIN / +5 V</text>
+<text x="1125" y="1156" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="500" text-anchor="middle">GND comum ao ESP e ao amplificador</text>
+<text x="900" y="1304" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="650" text-anchor="middle">USB 5 V → VIN do MAX · sem ligação ao 5VIN do ESP</text>
+<rect x="108" y="1176" width="110" height="116" rx="16" fill="#edf2f8" stroke="#74879b" stroke-width="3"/>
+<rect x="137" y="1199" width="52" height="21" rx="5" fill="#465b72" stroke="none" stroke-width="3"/>
+<rect x="148" y="1206" width="30" height="6" rx="2" fill="#d5e2f0" stroke="none" stroke-width="3"/>
+<path d="M169 1231 L145 1260 H160 L152 1281 L183 1249 H168 Z" fill="#c99500"/>
+<rect x="70" y="1380" width="615" height="136" rx="16" fill="#f2f7fc" stroke="#d7e2ee" stroke-width="2"/>
+<text x="96" y="1415" fill="#073c70" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="750" text-anchor="start">LEITURA DAS CONEXÕES</text>
+<circle cx="102" cy="1454" r="7" fill="#111827" stroke="none" stroke-width="2"/>
+<text x="122" y="1462" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" text-anchor="start">Ponto cheio = união elétrica.</text>
+<text x="96" y="1498" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" text-anchor="start">NC = pino deixado sem ligação.</text>
+<rect x="715" y="1380" width="805" height="136" rx="16" fill="#f2f7fc" stroke="#d7e2ee" stroke-width="2"/>
+<text x="741" y="1415" fill="#073c70" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="750" text-anchor="start">ALIMENTAÇÃO</text>
+<text x="741" y="1462" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" text-anchor="start">ESP por USB própria; MIC e display em 3V3.</text>
+<text x="741" y="1498" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" text-anchor="start">Duas fontes USB: unir só GND, não os positivos.</text>
+<rect x="1550" y="1380" width="780" height="136" rx="16" fill="#fff6f5" stroke="#f1d0cc" stroke-width="2"/>
+<text x="1576" y="1415" fill="#073c70" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="750" text-anchor="start">MONTAGEM VALIDADA</text>
+<text x="1576" y="1462" fill="#172b42" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">MAX em USB 5 V; GAIN/SD soltos; IN–OUT inalterado.</text>
+<text x="1576" y="1498" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="650" text-anchor="start">Montar desligado. Nunca ligar SPK− ao GND.</text>
+<text x="1200" y="1558" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="500" text-anchor="middle">Esquema funcional: a posição dos bornes não representa a ordem física dos conectores. Ligue pelos nomes serigrafados.</text>
+<text x="1200" y="1588" fill="#53677e" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" text-anchor="middle">Cores do MIC e dos sinais I2S TX seguem a montagem registrada; demais cores identificam os sinais no desenho.</text>
+</svg>

@@ -10,6 +10,18 @@ O servidor recebe o áudio do ESP32 por WebSocket, transcreve a fala com faster-
 
 Para usar o modo conversacional WebSocket/TTS, execute o servidor e configure sua URL e a credencial do dispositivo no firmware. O ESP32 cuida da wake word local, captura do microfone, reprodução I2S, tela e LED; o servidor cuida de STT, IA e TTS. Os projetos têm repositórios independentes; a pasta local do backend neste workspace é projects/juvenal_server.
 
+### Como tudo se conecta
+
+<p>
+  <a href="docs/juvenal-arquitetura.png">
+    <img src="docs/juvenal-arquitetura.png" alt="Arquitetura Juvenal: ESP32 envia fala e recebe voz por WebSocket; servidor Python transcreve, consulta a IA e executa ferramentas opcionais como Home Assistant" width="300" height="300">
+  </a>
+</p>
+
+[Ampliar arquitetura (PNG)](docs/juvenal-arquitetura.png) · [Versão vetorial (SVG)](docs/juvenal-arquitetura.svg)
+
+O ESP ouve e fala; o Python coordena a conversa, consulta a IA e executa as ferramentas solicitadas por ela. A imagem mostra o modo de áudio no ESP e a integração opcional pela API do Home Assistant.
+
 ## Home Assistant
 
 A integração opcional com o Home Assistant roda no [Juvenal Server](https://github.com/antonio-abrantes/juvenal_esp_v2_server#home-assistant). No modo padrão api, a IA do HA interpreta o comando e sua resposta é reproduzida neste ESP; no modo text_endpoint, o receptor assume a fala e o ESP não reproduz essa resposta. Não é necessário cadastrar ações no padrão atual.
@@ -47,6 +59,16 @@ No IP do último log, abra [o painel do ESP](http://192.168.100.50/), porta80, u
 O controle Volume do alto-falante permite0–100% (0=mudo;100=PCM original). Aplica durante reprodução e salva na NVS entre interações; aguarde a indicação Salvo no ESP32 antes de reiniciar para preservar o último ajuste. Não muda ganho do microfone. A boca usa o nível do PCM após volume, publicado quando o descritor DMA termina; LVGL atualiza localmente a cada50ms, sem chamada ao LLM. Silêncio/mute fecha a boca; término/cancelamento restaura a pose. O usuário confirmou os LEDs de inicialização e a boca na placa; volume e persistência ainda não receberam aceite específico.
 
 ### Hardware e conexão rápida
+
+<p>
+  <a href="docs/juvenal-esquema-ligacoes.png">
+    <img src="docs/juvenal-esquema-ligacoes.png" alt="Esquema de ligações do Juvenal: INMP441, GC9A01, MAX98357A, alto-falante e alimentação com GND comum" width="600">
+  </a>
+</p>
+
+[Ampliar esquema (PNG)](docs/juvenal-esquema-ligacoes.png) · [Versão vetorial (SVG)](docs/juvenal-esquema-ligacoes.svg)
+
+Esquema funcional com a pinagem do projeto; a posição dos bornes no desenho não indica a ordem física dos conectores da placa.
 
 | INMP441 | ESP32-S3 | Cor do fio desta montagem |
 |---|---|---|

@@ -12,6 +12,8 @@
 
 ## Mapeamento físico confirmado
 
+**Esquema visual:** [abrir PNG](juvenal-esquema-ligacoes.png) ou [SVG vetorial](juvenal-esquema-ligacoes.svg). Os bornes são organizados por função, sem representar a ordem física dos conectores. Conferir os nomes serigrafados na placa e nos módulos; os únicos pontos cheios de derivação no desenho pertencem ao GND comum.
+
 | Cor nesta montagem | Saída INMP441 | Entrada ESP32-S3 | Observação |
 |---|---|---|---|
 | **Vermelho** | `VDD` | `3V3` | **Somente 3,3 V**; nunca `5V` ou `VIN` |
