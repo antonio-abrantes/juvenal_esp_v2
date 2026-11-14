@@ -48,10 +48,14 @@ static std::atomic<uint32_t> output_bytes{0};
 static void fail(const char *code)
 {
     portENTER_CRITICAL(&ids_mux);
-    std::snprintf(last_error, sizeof(last_error), "%s", code);
+    const bool first = !last_error[0];
+    // O erro de encerramento nao deve apagar a causa inicial.
+    if (first) std::snprintf(last_error, sizeof(last_error), "%s", code);
     portEXIT_CRITICAL(&ids_mux);
     capture.store(false, std::memory_order_release);
     fault.store(true, std::memory_order_release);
+    // fail() roda nas tarefas WS/worker; UART sempre fora da critical section.
+    if (first) ESP_LOGE("JUVENAL_WS", "Primeira falha: %s", code);
 }
 
 static bool identifier(const char *value, size_t required)

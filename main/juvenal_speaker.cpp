@@ -19,11 +19,10 @@ static i2s_chan_handle_t tx = nullptr;
 static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 static uint8_t ring[CAPACITY];
 static uint32_t read_at, write_at, used, received, consumed, drained, staged, expected;
-static uint32_t played_gap = UINT32_MAX;
 static bool active, running, ended, short_block, failed;
 static unsigned volume = 100, played_level;
 static TickType_t played_at;
-struct Slot { void *address; uint32_t bytes; uint32_t gap_at; bool gap; unsigned level; };
+struct Slot { void *address; uint32_t bytes; unsigned level; };
 static Slot slots[4];
 
 static bool valid_pin(int pin)
@@ -73,12 +72,7 @@ static bool IRAM_ATTR on_sent(i2s_chan_handle_t, i2s_event_data_t *event, void *
     // Metadado do descritor que SAIU, nao do audio recebido/na fila.
     played_level = slot->level;
     played_at = xTaskGetTickCountFromISR();
-    if (slot->gap) {
-        if (slot->gap_at < played_gap) played_gap = slot->gap_at;
-        if (received > played_gap) failed = true;
-    }
     slot->bytes = 0;
-    slot->gap = false;
     const uint32_t bytes = used >= 640 ? 640 : ((ended || short_block) ? used : 0);
     auto *destination = static_cast<int16_t *>(event->dma_buf);
     uint32_t amplitude = 0;
@@ -100,10 +94,9 @@ static bool IRAM_ATTR on_sent(i2s_chan_handle_t, i2s_event_data_t *event, void *
     staged += bytes;
     slot->bytes = bytes;
     slot->level = bytes ? amplitude / (bytes / 2) : 0;
-    if (!bytes && staged && !ended && !short_block) {
-        slot->gap = true;
-        slot->gap_at = staged;
-    }
+    // O DMA foi zerado por auto_clear_before_cb: bytes==0 toca silencio.
+    // PCM recebido depois dessa pausa continua valido e mantem sua ordem.
+    // Sucesso exige output.end e todos os bytes realmente drenados.
     portEXIT_CRITICAL_ISR(&mux);
     return false;
 }
@@ -145,7 +138,6 @@ bool juvenal_speaker_begin(void)
     if (!juvenal_speaker_available() || active || running) return false;
     portENTER_CRITICAL(&mux);
     read_at = write_at = used = received = consumed = drained = staged = expected = 0;
-    played_gap = UINT32_MAX;
     ended = short_block = failed = false;
     played_level = 0;
     std::memset(slots, 0, sizeof(slots));
@@ -157,10 +149,22 @@ bool juvenal_speaker_begin(void)
 bool juvenal_speaker_push(const uint8_t *pcm, size_t bytes)
 {
     portENTER_CRITICAL(&mux);
-    if (!active || ended || short_block || !bytes || bytes > 640 || bytes % 2 ||
-        used + bytes > CAPACITY || received + bytes > MAX_BYTES || failed) {
+    const char *reason = nullptr;
+    if (!active) reason = "inactive";
+    else if (ended) reason = "after_end";
+    else if (short_block) reason = "after_final_block";
+    else if (!pcm || !bytes || bytes > 640 || bytes % 2) reason = "format";
+    else if (used + bytes > CAPACITY) reason = "buffer_full";
+    else if (received + bytes > MAX_BYTES) reason = "duration_limit";
+    else if (failed) reason = "player_failed";
+    if (reason) {
+        const uint32_t queued = used, total = received;
         failed = true;
         portEXIT_CRITICAL(&mux);
+        // Falha real, fora do ISR/critical; sem imprimir o conteudo do audio.
+        ESP_LOGE("JUVENAL_TX", "PCM recusado: motivo=%s bytes=%u fila=%u recebidos=%u",
+                 reason, static_cast<unsigned>(bytes), static_cast<unsigned>(queued),
+                 static_cast<unsigned>(total));
         return false;
     }
     for (size_t i = 0; i < bytes; ++i) {
@@ -170,10 +174,8 @@ bool juvenal_speaker_push(const uint8_t *pcm, size_t bytes)
     used += bytes;
     received += bytes;
     short_block = bytes < 640;
-    if (played_gap != UINT32_MAX && received > played_gap) failed = true;
-    const bool ok = !failed;
     portEXIT_CRITICAL(&mux);
-    return ok;
+    return true;
 }
 
 bool juvenal_speaker_end(uint32_t total_bytes)
