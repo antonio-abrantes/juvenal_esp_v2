@@ -1,5 +1,6 @@
 #include "juvenal_ws.h"
 #include "juvenal_config.h"
+#include "juvenal_web.h"
 #include "juvenal_face_neutral.h"
 #include "juvenal_speaker.h"
 #include <algorithm>
@@ -39,6 +40,7 @@ static TaskHandle_t task;
 static esp_websocket_client_handle_t client;
 static portMUX_TYPE ids_mux = portMUX_INITIALIZER_UNLOCKED;
 static char session_id[33], turn_id[33], last_error[64];
+static char session_url[256];
 static char incoming[8193];
 static size_t incoming_used, frame_used, frame_length;
 static int message_opcode;
@@ -289,9 +291,10 @@ static bool send(const char *event, cJSON *payload)
     return ok;
 }
 
-static bool configured()
+static bool configured(const char *url)
 {
-    const char *url = JUVENAL_WS_URL, *token = JUVENAL_WS_DEVICE_TOKEN, *device = JUVENAL_WS_DEVICE_ID;
+    const char *token = JUVENAL_WS_DEVICE_TOKEN, *device = JUVENAL_WS_DEVICE_ID;
+    if (!juvenal_web_valid_ws_url(url)) return false;
     const size_t url_length = std::strlen(url);
     if ((std::strncmp(url, "ws://", 5) && std::strncmp(url, "wss://", 6)) ||
         url_length < 15 || url_length > 255 || std::strcmp(url + url_length - 7, "/ws/esp") ||
@@ -324,7 +327,7 @@ static void worker(void *)
         char authorization[180];
         std::snprintf(authorization, sizeof(authorization), "Authorization: Bearer %s\r\n", JUVENAL_WS_DEVICE_TOKEN);
         esp_websocket_client_config_t config = {};
-        config.uri = JUVENAL_WS_URL;
+        config.uri = session_url;
         config.headers = authorization;
         config.disable_auto_reconnect = true;
         config.enable_close_reconnect = false;
@@ -514,16 +517,18 @@ esp_err_t juvenal_ws_init(int16_t *capture_buffer, size_t count, juvenal_ws_done
 
 bool juvenal_ws_wake(void)
 {
-    if (!task || !configured()) {
-        ESP_LOGW("JUVENAL_WS", "Configure URL WS, identidade e token no arquivo local");
+    char url[256]; juvenal_web_get_ws_url(url,sizeof(url));
+    if (!task || !configured(url)) {
+        ESP_LOGW("JUVENAL_WS", "Configure URL WS no painel/header e identidade/token no arquivo local");
         return false;
     }
-    if (!std::strncmp(JUVENAL_WS_URL, "wss://", 6) && std::time(nullptr) < 1704067200) {
+    if (!std::strncmp(url, "wss://", 6) && std::time(nullptr) < 1704067200) {
         ESP_LOGW("JUVENAL_WS", "Aguardando sincronizacao de horario para validar TLS");
         return false;
     }
     bool idle = false;
     if (!active.compare_exchange_strong(idle, true)) return false;
+    std::snprintf(session_url,sizeof(session_url),"%s",url);
     samples.store(0); released.store(0); transmitted.store(0); overflow.store(false); last_rms.store(0);
     stage.store(Stage::CONNECTING, std::memory_order_release);
     capture.store(true, std::memory_order_release);
@@ -561,7 +566,9 @@ void juvenal_ws_on_pcm(const int16_t *input, size_t count)
 }
 
 bool juvenal_ws_active(void) { return active.load(std::memory_order_acquire); }
-bool juvenal_ws_configured(void) { return configured(); }
+bool juvenal_ws_configured(void) {
+    char url[256]; juvenal_web_get_ws_url(url,sizeof(url)); return configured(url);
+}
 
 void juvenal_ws_status(char *output, size_t size)
 {

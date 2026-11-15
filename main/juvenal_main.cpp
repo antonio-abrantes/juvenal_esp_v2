@@ -665,10 +665,14 @@ extern "C" void app_main(void)
     if (!boot_check(juvenal_face_neutral_init(), "GC9A01/LVGL")) return;
     if (JUVENAL_SPEAKER_ENABLED && !boot_check(juvenal_speaker_init(), "I2S TX")) return;
     if (!boot_check(wifi_start(), "Wi-Fi")) return;
-    const bool tls = JUVENAL_AUTO_TRANSPORT_WS && !std::strncmp(JUVENAL_WS_URL, "wss://", 6);
-    if (tls) {
+    // Permitir trocar ws:// por wss:// no painel sem novo flash; WS local nao espera NTP.
+    char initial_ws_url[256]; juvenal_web_get_ws_url(initial_ws_url,sizeof(initial_ws_url));
+    const bool tls = JUVENAL_AUTO_TRANSPORT_WS && !std::strncmp(initial_ws_url,"wss://",6);
+    if (JUVENAL_AUTO_TRANSPORT_WS) {
         esp_sntp_config_t clock = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
-        if (!boot_check(esp_netif_sntp_init(&clock), "relogio TLS")) return;
+        const esp_err_t clock_result = esp_netif_sntp_init(&clock);
+        if (tls && !boot_check(clock_result,"relogio TLS")) return;
+        if (!tls && clock_result != ESP_OK) ESP_LOGW(TAG,"Relogio opcional indisponivel; WS local preservado");
     }
     if (!boot_check(xTaskCreate(recorder_controller, "juvenal_rec", 8192, nullptr,
                                  5, &s_controller_task) == pdPASS ? ESP_OK : ESP_ERR_NO_MEM,
@@ -704,7 +708,9 @@ extern "C" void app_main(void)
         // pause() deixa wake em IDLE durante sessao/manual: isto nao e falha.
         const bool audio_ready = s_mic.is_running() && (s_wake.is_running() || audio_started) && s_pcm_seen.load();
         if (audio_ready) audio_started = true;
-        const bool clock_ready = !tls || std::time(nullptr) >= 1704067200;
+        juvenal_web_get_ws_url(initial_ws_url,sizeof(initial_ws_url));
+        const bool clock_ready = !JUVENAL_AUTO_TRANSPORT_WS ||
+            std::strncmp(initial_ws_url,"wss://",6) || std::time(nullptr) >= 1704067200;
         if (audio_error && !fatal) {
             fatal = true;
             ESP_LOGE(TAG, "Falha microfone/wake: mic=%d wake=%d",

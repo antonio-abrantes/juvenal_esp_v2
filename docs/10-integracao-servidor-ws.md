@@ -6,7 +6,7 @@ O usuário forneceu boot e três sessões completas no principal em13/11/2026: V
 
 O servidor usa .env próprio: no ambiente atual, AUDIO_OUTPUT_MODE=esp32, LOCAL_VOICE_ENABLED=false, STT_ENABLED=true e ESP_DEVICE_ID/TOKEN. Endpoint continua sendo uma alternativa explícita de saída textual. Preserve a URL de entrega de texto e o provedor de IA. O header privado deste firmware usa a mesma identidade/token, Wi-Fi e URL ws://IP_DO_SERVIDOR:8000/ws/esp. JUVENAL_AUTO_TRANSPORT_WS=true. Reinicie o servidor e compile/grave o firmware manualmente.
 
-Neste workspace foram preparados os headers privados com os valores reutilizáveis de Wi-Fi/painel/diagnóstico e o token do servidor. O endereço LAN do Windows foi detectado no momento da preparação; se mudar por DHCP, atualize JUVENAL_WS_URL. Nada disso é publicado nos exemplos. Não mostrar tokens nos logs, URLs ou capturas de tela.
+Neste workspace foram preparados os headers privados com os valores reutilizáveis de Wi-Fi/painel/diagnóstico e o token do servidor. `JUVENAL_WS_URL` é o padrão compilado; o painel agora permite um override persistido em NVS, com restauração do padrão, se o endereço mudar. Nada disso é publicado nos exemplos. Não mostrar tokens nos logs, URLs ou capturas de tela.
 
 LOCAL_VOICE_ENABLED no servidor pode continuar true para diagnóstico no computador; ao validar a entrada ESP, false evita o microfone do host. Essa alteração não é automática. O painel Python continua na porta configurada (8000 por padrão); o painel local do ESP usa HTTP na porta 80 e suas próprias credenciais.
 
@@ -30,7 +30,9 @@ A entrega de cada turno aguarda HTTP em endpoint, player em local ou output.end/
 
 O painel mantém gravação manual, stop, ouvir/baixar WAV, descartar e POST por worker com resposta 202. O WAV é retido em falha e expira após 120 s sem acesso. Wake fica suspensa enquanto o modo manual ocupa o buffer; libere/descarte a gravação antes de retornar.
 
-A URL editável do painel é somente webhook WAV de diagnóstico, persistida no mesmo namespace/chave NVS. Não aponta para /ws/esp, não recebe o texto final da IA e não altera JUVENAL_WS_URL. O transporte automático pode ser revertido explicitamente por JUVENAL_AUTO_TRANSPORT_WS=false e novo build/flash; nunca há WS + POST automático simultâneo. Isso requer que o webhook WAV/API Key estejam configurados para aquele contrato.
+A URL do formulário de webhook continua sendo somente o destino WAV de diagnóstico, na chave NVS existente. O servidor de voz tem um formulário separado e endpoints autenticados GET/POST `/api/ws`: URL `ws(s)://host[:porta]/ws/esp`, até 255 bytes, sem credenciais/query/fragmento. Vazio restaura `JUVENAL_WS_URL` compilada. A chave `juvenal_web/ws_url` guarda o override; a interface mostra se a persistência já terminou. A troca afeta somente a próxima conversa, com uma cópia imutável da URL por sessão. Identidade/token continuam privados no firmware. NTP é iniciado para permitir futura troca a WSS, sem tornar sincronização obrigatória para WS local. A atualização foi implementada, sem build/flash ou validação física nesta etapa.
+
+O transporte automático pode ser revertido explicitamente por JUVENAL_AUTO_TRANSPORT_WS=false e novo build/flash; nunca há WS + POST automático simultâneo. Isso requer que o webhook WAV/API Key estejam configurados para aquele contrato.
 
 As condições de recuperação e concorrência precisam ser avaliadas novamente no principal. Os HTTP 200 relatados no experimental não foram produzidos por este build.
 

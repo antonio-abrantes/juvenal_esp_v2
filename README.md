@@ -6,7 +6,7 @@ Firmware do assistente Juvenal para ESP32-S3 N16R8, com INMP441, MicroWakeWord l
 
 Este firmware se integra ao **[Juvenal Server — juvenal_esp_v2_server](https://github.com/antonio-abrantes/juvenal_esp_v2_server)**, o backend Python responsável pelo processamento da conversa.
 
-O servidor recebe o áudio do ESP32 por WebSocket, transcreve a fala com faster-whisper, consulta o provedor de IA e mantém o contexto e a persona do Juvenal. Conforme a configuração, sintetiza a resposta com Piper e devolve PCM ao ESP32, reproduz no próprio servidor ou entrega texto a um endpoint HTTP. Também controla a continuidade da conversa e seu timeout de inatividade.
+O servidor recebe o áudio do ESP32 por WebSocket, transcreve a fala com Parakeet ou faster-whisper, consulta o provedor de IA e mantém o contexto e a persona do Juvenal. Conforme a configuração, sintetiza a resposta com Piper e devolve PCM ao ESP32, reproduz no próprio servidor ou entrega texto a um endpoint HTTP. Também controla a continuidade da conversa e seu timeout de inatividade.
 
 Para usar o modo conversacional WebSocket/TTS, execute o servidor e configure sua URL e a credencial do dispositivo no firmware. O ESP32 cuida da wake word local, captura do microfone, reprodução I2S, tela e LED; o servidor cuida de STT, IA e TTS. Os projetos têm repositórios independentes; a pasta local do backend neste workspace é projects/juvenal_server.
 
@@ -48,7 +48,7 @@ A etapa Home Assistant/persona foi concluída no servidor. A fase03 mantém pend
 
 Na espera, MicroWakeWord reconhece Juvenal no próprio ESP e não há WS aberto. Wake reserva o estado, pausa inferência, sinaliza três verdes e abre uma conexão autenticada. PCM16 mono 16 kHz segue para STT/IA no servidor; azul durante transmissão/processamento. Após a resposta, a escuta reabre na mesma conexão; inatividade configurada exclusivamente no servidor, despedida ou erro encerra e retorna à wake. Queda não provoca replay/reconexão automática.
 
-O servidor seleciona um único destino: endpoint textual, áudio local ou PCM de retorno ao ESP. A primeira configuração preservou endpoint; o usuário posteriormente selecionou esp32 e desligou a captura local do Windows. O firmware privado habilita TX para a montagem validada. Áudio retorna nos turnos destinados ao ESP, incluindo respostas da API HA; o modo textual HA delega a fala ao receptor. O painel do ESP mantém gravação, escuta/download, descarte, envio manual WAV/HTTP e diagnósticos. A URL desse formulário é do webhook WAV de diagnóstico, não configura WS nem a saída textual do servidor. Uma mesma wake não envia pelos dois transportes.
+O servidor seleciona um único destino: endpoint textual, áudio local ou PCM de retorno ao ESP. A primeira configuração preservou endpoint; o usuário posteriormente selecionou esp32 e desligou a captura local do Windows. O firmware privado habilita TX para a montagem validada. Áudio retorna nos turnos destinados ao ESP, incluindo respostas da API HA; o modo textual HA delega a fala ao receptor. O painel do ESP mantém gravação, escuta/download, descarte, envio manual WAV/HTTP e diagnósticos. Há formulários separados para o servidor WebSocket e o webhook WAV de diagnóstico; nenhum deles altera a saída textual do Python. Uma mesma wake não envia pelos dois transportes.
 
 ### Inicialização, painel e volume
 
@@ -57,6 +57,18 @@ LED amarelo piscando ao iniciar/conectar; verde por cerca de2s quando recursos l
 No IP do último log, abra [o painel do ESP](http://192.168.100.50/), porta80, usando o usuário e a senha já definidos no header privado main/juvenal_web_credentials.h. Não colocar credenciais no HTML ou em documentos públicos. O painel do Python é outro serviço, na porta8000.
 
 O controle Volume do alto-falante permite0–100% (0=mudo;100=PCM original). Aplica durante reprodução e salva na NVS entre interações; aguarde a indicação Salvo no ESP32 antes de reiniciar para preservar o último ajuste. Não muda ganho do microfone. A boca usa o nível do PCM após volume, publicado quando o descritor DMA termina; LVGL atualiza localmente a cada50ms, sem chamada ao LLM. Silêncio/mute fecha a boca; término/cancelamento restaura a pose. O usuário confirmou os LEDs de inicialização e a boca na placa; volume e persistência ainda não receberam aceite específico.
+
+### Alterar o servidor pelo painel
+
+No painel local autenticado, a seção **Servidor de voz — WebSocket** permite salvar `ws://IP:8000/ws/esp` ou `wss://DOMINIO/ws/esp`. A URL não pode conter usuário, senha, token, query ou fragmento. Identidade/token continuam nos headers privados já configurados. A credencial do dispositivo deve corresponder no servidor de destino; trocar apenas a URL não cria outra credencial.
+
+O padrão é `JUVENAL_WS_URL`, compilado do header privado `main/juvenal_secrets.h`. O ESP não lê o `.env` do Python. A URL salva pelo painel tem prioridade e permanece na NVS após reiniciar; **Usar padrão do firmware** remove o override. Alterar o header compilado não substitui um override já salvo. Mudanças valem na próxima conversa, sem interromper a sessão atual; aguarde **Salvo no ESP32** antes de desligar/reiniciar. A gravação NVS ocorre entre interações, junto ao mecanismo existente de volume.
+
+Exemplos na rede do autor: Orange Pi `ws://192.168.100.131:8000/ws/esp`; Windows `ws://192.168.100.96:8000/ws/esp`. Com WSS, o certificado continua sendo verificado e é necessário relógio sincronizado. WS local continua sem exigir sincronização NTP para conectar. O painel usa o mesmo usuário/senha privados de antes, na porta 80 da LAN; não deve ser publicado na internet.
+
+Esse recurso requer um primeiro build/flash desta atualização. Depois, trocar o endereço pelo painel dispensa novo flash. Implementação entregue, persistência/troca ainda pendentes de avaliação na placa. Protocolo de voz, pinos, áudio, face e LED preservados.
+
+As consultas de clima/câmbio/notícias são configuradas e executadas **no servidor Python**, não no ESP; as respostas usam o TTS/WS existente. Veja o [módulo internet do servidor](https://github.com/antonio-abrantes/juvenal_esp_v2_server/blob/develop/docs/internet.md).
 
 ### Hardware e conexão rápida
 

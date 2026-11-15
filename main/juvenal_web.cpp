@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cctype>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
@@ -30,6 +31,8 @@ namespace {
 static const char *TAG = "JUVENAL_WEB";
 static constexpr size_t URL_MAX = 255;
 static char s_url[URL_MAX + 1] = {};
+static char s_ws_url[URL_MAX + 1] = {};
+static std::atomic<unsigned> s_ws_revision{0}, s_ws_saved{0};
 static SemaphoreHandle_t s_url_mutex = nullptr;
 static httpd_handle_t s_server = nullptr;
 static std::atomic<unsigned> s_volume_revision{0}, s_volume_saved{0};
@@ -157,6 +160,43 @@ static esp_err_t post_config(httpd_req_t *req)
     if(!ok)return error(req,"400 Bad Request","URL invalida ou falha ao salvar NVS");
     return json(req,"200 OK","{\"message\":\"Webhook salvo na NVS.\"}");
 }
+static esp_err_t get_ws_config(httpd_req_t *req)
+{
+    if (!authenticated(req)) return ESP_OK;
+    char effective[URL_MAX + 1]; juvenal_web_get_ws_url(effective, sizeof(effective));
+    cJSON *doc = cJSON_CreateObject();
+    if (!doc) return error(req,"500 Internal Server Error","Memoria insuficiente");
+    cJSON_AddStringToObject(doc,"url",effective);
+    cJSON_AddStringToObject(doc,"default_url",juvenal_web_valid_ws_url(JUVENAL_WS_URL) ? JUVENAL_WS_URL : "");
+    xSemaphoreTake(s_url_mutex,portMAX_DELAY);
+    cJSON_AddBoolToObject(doc,"override",s_ws_url[0] != 0);
+    cJSON_AddBoolToObject(doc,"persisted",s_ws_revision.load() == s_ws_saved.load());
+    xSemaphoreGive(s_url_mutex);
+    char *body = cJSON_PrintUnformatted(doc); cJSON_Delete(doc);
+    if (!body) return error(req,"500 Internal Server Error","Memoria insuficiente");
+    const esp_err_t result = json(req,"200 OK",body); cJSON_free(body); return result;
+}
+static esp_err_t post_ws_config(httpd_req_t *req)
+{
+    if (!authenticated(req)) return ESP_OK;
+    if (!valid_mutation(req)) return error(req,"403 Forbidden","Cabecalho de seguranca ausente");
+    if (req->content_len <= 0 || req->content_len > 400)
+        return error(req,"400 Bad Request","Corpo invalido");
+    char body[401]; int received = 0;
+    while (received < req->content_len) {
+        int count = httpd_req_recv(req,body + received,req->content_len - received);
+        if (count <= 0) return error(req,"408 Request Timeout","Formulario incompleto");
+        received += count;
+    }
+    body[received] = 0;
+    cJSON *doc = cJSON_ParseWithLengthOpts(body, received + 1, nullptr, true);
+    const cJSON *field = cJSON_GetObjectItemCaseSensitive(doc,"url");
+    const bool valid = cJSON_IsObject(doc) && field && doc->child == field && !field->next &&
+        cJSON_IsString(field) && juvenal_web_set_ws_url(field->valuestring);
+    cJSON_Delete(doc);
+    if (!valid) return error(req,"400 Bad Request","Use ws:// ou wss://host[:porta]/ws/esp, sem token na URL. Vazio restaura padrao.");
+    return json(req,"202 Accepted","{\"message\":\"Destino WS aplicado para a proxima conversa. Aguarde salvar antes de reiniciar.\"}");
+}
 static esp_err_t get_volume(httpd_req_t *req)
 {
     if (!authenticated(req)) return ESP_OK;
@@ -268,6 +308,7 @@ extern "C" esp_err_t juvenal_web_init(void)
     if(!s_url_mutex)s_url_mutex=xSemaphoreCreateMutex();
     if(!s_url_mutex) {ESP_LOGE(TAG,"Sem RAM para mutex da URL");return ESP_ERR_NO_MEM;}
     std::snprintf(s_url,sizeof(s_url),"%s",JUVENAL_WEBHOOK_URL);
+    s_ws_url[0] = 0;
     nvs_handle_t nvs;
     const esp_err_t opened = nvs_open("juvenal_web",NVS_READONLY,&nvs);
     if (opened != ESP_OK && opened != ESP_ERR_NVS_NOT_FOUND) return opened;
@@ -275,6 +316,9 @@ extern "C" esp_err_t juvenal_web_init(void)
         char saved[URL_MAX+1];size_t len=sizeof(saved);
         if(nvs_get_str(nvs,"webhook",saved,&len)==ESP_OK && valid_url(saved))
             std::snprintf(s_url,sizeof(s_url),"%s",saved);
+        len = sizeof(saved);
+        if (nvs_get_str(nvs,"ws_url",saved,&len) == ESP_OK && juvenal_web_valid_ws_url(saved))
+            std::snprintf(s_ws_url,sizeof(s_ws_url),"%s",saved);
         uint8_t saved_volume = 100;
         if (nvs_get_u8(nvs, "volume", &saved_volume) == ESP_OK && saved_volume <= 100)
             juvenal_speaker_set_volume(saved_volume);
@@ -289,6 +333,66 @@ extern "C" void juvenal_web_get_url(char *out,size_t size)
     xSemaphoreTake(s_url_mutex,portMAX_DELAY);
     std::snprintf(out,size,"%s",s_url);
     xSemaphoreGive(s_url_mutex);
+}
+extern "C" bool juvenal_web_valid_ws_url(const char *url)
+{
+    if (!url || std::strlen(url) > URL_MAX) return false;
+    const char *host = !std::strncmp(url,"ws://",5) ? url + 5 :
+                       !std::strncmp(url,"wss://",6) ? url + 6 : nullptr;
+    if (!host || !host[0]) return false;
+    const char *path = std::strchr(host,'/');
+    if (!path || path == host || std::strcmp(path,"/ws/esp")) return false;
+    const char *port = nullptr;
+    const char *host_end = path;
+    if (host[0] == '[') {
+        const char *close = std::strchr(host,']');
+        if (!close || close == host + 1 || close >= path) return false;
+        bool colon = false;
+        for (const char *p = host + 1; p < close; ++p) {
+            if (*p == ':') colon = true;
+            else if (!std::isxdigit(static_cast<unsigned char>(*p)) && *p != '.') return false;
+        }
+        if (!colon) return false;
+        if (close + 1 < path) {
+            if (close[1] != ':') return false;
+            port = close + 2;
+        }
+    } else {
+        const char *colon = std::strchr(host,':');
+        if (colon && colon < path) { host_end = colon; port = colon + 1; }
+        if (host_end == host) return false;
+        for (const char *p = host; p < host_end; ++p)
+            if (!std::isalnum(static_cast<unsigned char>(*p)) && *p != '.' && *p != '-') return false;
+    }
+    if (port) {
+        if (port == path || path - port > 5) return false;
+        unsigned value = 0;
+        for (const char *p = port; p < path; ++p) {
+            if (!std::isdigit(static_cast<unsigned char>(*p))) return false;
+            value = value * 10 + unsigned(*p - '0');
+        }
+        if (!value || value > 65535) return false;
+    }
+    return true;
+}
+extern "C" void juvenal_web_get_ws_url(char *out,size_t size)
+{
+    if (!out || !size) return;
+    if (!s_url_mutex) { std::snprintf(out,size,"%s",JUVENAL_WS_URL); return; }
+    xSemaphoreTake(s_url_mutex,portMAX_DELAY);
+    std::snprintf(out,size,"%s",s_ws_url[0] ? s_ws_url : JUVENAL_WS_URL);
+    xSemaphoreGive(s_url_mutex);
+}
+extern "C" bool juvenal_web_set_ws_url(const char *url)
+{
+    if (!url || (url[0] && !juvenal_web_valid_ws_url(url)) || !s_url_mutex) return false;
+    xSemaphoreTake(s_url_mutex,portMAX_DELAY);
+    if (std::strcmp(s_ws_url,url)) {
+        std::snprintf(s_ws_url,sizeof(s_ws_url),"%s",url);
+        s_ws_revision.fetch_add(1);
+    }
+    xSemaphoreGive(s_url_mutex);
+    return true;
 }
 extern "C" bool juvenal_web_set_url(const char *url)
 {
@@ -315,7 +419,7 @@ extern "C" esp_err_t juvenal_web_start(void)
     }
     httpd_config_t cfg=HTTPD_DEFAULT_CONFIG();
     cfg.server_port=80;
-    cfg.max_uri_handlers=11;
+    cfg.max_uri_handlers=13;
     cfg.stack_size=8192;
     cfg.lru_purge_enable=true;
     cfg.recv_wait_timeout=10;
@@ -325,6 +429,8 @@ extern "C" esp_err_t juvenal_web_start(void)
     add_uri("/",HTTP_GET,get_home);
     add_uri("/api/config",HTTP_GET,get_config);
     add_uri("/api/config",HTTP_POST,post_config);
+    add_uri("/api/ws",HTTP_GET,get_ws_config);
+    add_uri("/api/ws",HTTP_POST,post_ws_config);
     add_uri("/api/status",HTTP_GET,get_status);
     add_uri("/api/record/start",HTTP_POST,post_start);
     add_uri("/api/record/stop",HTTP_POST,post_stop);
@@ -340,14 +446,19 @@ extern "C" esp_err_t juvenal_web_start(void)
 
 extern "C" bool juvenal_web_settings_pending(void)
 {
-    return s_volume_revision.load() != s_volume_saved.load();
+    return s_volume_revision.load() != s_volume_saved.load() || s_ws_revision.load() != s_ws_saved.load();
 }
 
 extern "C" void juvenal_web_flush_settings(void)
 {
     const unsigned revision = s_volume_revision.load();
+    char ws_url[URL_MAX + 1];
+    xSemaphoreTake(s_url_mutex,portMAX_DELAY);
+    const unsigned ws_revision = s_ws_revision.load();
+    std::snprintf(ws_url,sizeof(ws_url),"%s",s_ws_url);
+    xSemaphoreGive(s_url_mutex);
     const TickType_t now = xTaskGetTickCount();
-    if (revision == s_volume_saved.load() || juvenal_ws_active() ||
+    if ((revision == s_volume_saved.load() && ws_revision == s_ws_saved.load()) || juvenal_ws_active() ||
         now - s_volume_attempt < pdMS_TO_TICKS(2000)) return;
     s_volume_attempt = now;
     const uint8_t value = static_cast<uint8_t>(juvenal_speaker_get_volume());
@@ -355,9 +466,15 @@ extern "C" void juvenal_web_flush_settings(void)
     esp_err_t result = nvs_open("juvenal_web", NVS_READWRITE, &handle);
     if (result == ESP_OK) {
         result = nvs_set_u8(handle, "volume", value);
+        if (result == ESP_OK && ws_revision != s_ws_saved.load()) {
+            result = ws_url[0] ? nvs_set_str(handle,"ws_url",ws_url) : nvs_erase_key(handle,"ws_url");
+            if (result == ESP_ERR_NVS_NOT_FOUND) result = ESP_OK;
+        }
         if (result == ESP_OK) result = nvs_commit(handle);
         nvs_close(handle);
     }
-    if (result == ESP_OK) s_volume_saved.store(revision);
-    else ESP_LOGW(TAG, "Volume aplicado; persistencia pendente: %s", esp_err_to_name(result));
+    if (result == ESP_OK) {
+        s_volume_saved.store(revision); s_ws_saved.store(ws_revision);
+        ESP_LOGI(TAG,"Configuracao local persistida (volume/WS)");
+    } else ESP_LOGW(TAG, "Configuracao aplicada; persistencia pendente: %s", esp_err_to_name(result));
 }

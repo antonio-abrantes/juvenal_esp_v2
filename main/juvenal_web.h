@@ -22,6 +22,10 @@ bool juvenal_web_settings_pending(void);
 void juvenal_web_flush_settings(void);
 void juvenal_web_get_url(char *out, size_t size);
 bool juvenal_web_set_url(const char *url);
+/* WS: override NVS vazio usa JUVENAL_WS_URL do header privado compilado. */
+bool juvenal_web_valid_ws_url(const char *url);
+void juvenal_web_get_ws_url(char *out, size_t size);
+bool juvenal_web_set_ws_url(const char *url);
 
 #ifdef __cplusplus
 }

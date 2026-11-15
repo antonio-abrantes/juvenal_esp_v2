@@ -23,6 +23,11 @@ button.secondary{background:#254652;color:#e8f9fb}button.danger{background:#7834
 <input id="url" type="url" maxlength="255" spellcheck="false" placeholder="https://exemplo.com/webhook/esp_command">
 <div class="row"><button id="save">Salvar webhook</button><span class="pill">X-API-Key: mantida no firmware</span></div>
 <p>O destino salvo fica na NVS e permanece após reiniciar o ESP32.</p></section>
+<section class="card"><h2>Servidor de voz — WebSocket</h2>
+<label for="wsUrl">Destino das conversas do Juvenal</label>
+<input id="wsUrl" type="text" maxlength="255" spellcheck="false" placeholder="ws://IP_DO_SERVIDOR:8000/ws/esp">
+<div class="row"><button id="saveWs">Salvar servidor</button><button id="resetWs" class="secondary">Usar padrão do firmware</button><span id="wsSaved" class="pill">Consultando...</span></div>
+<p id="wsDefault"></p><p>Use ws:// na LAN ou wss:// com certificado válido. O caminho deve terminar em /ws/esp. A alteração vale na próxima conversa; aguarde “Salvo no ESP32” antes de reiniciar. Identidade e token permanecem no firmware, fora da URL.</p></section>
 <section class="card"><h2>Volume do alto-falante</h2>
 <label for="volume">Saída no ESP32: <output id="volumeValue" for="volume">100%</output></label>
 <input id="volume" type="range" min="0" max="100" step="1" value="100">
@@ -50,7 +55,8 @@ button.secondary{background:#254652;color:#e8f9fb}button.danger{background:#7834
 </div>
 <script>
 const $=id=>document.getElementById(id);
-let volumeDirty=false, volumeSaving=false;
+let volumeDirty=false, volumeSaving=false, wsSaving=false;
+let wsPollAt=0;
 let phase='idle', lastBlobUrl=null, busy=false, polling=false, lastPostSequence=null;
 const api=async(path,method='GET',data=null)=>{
  const opt={method,cache:'no-store',headers:{'X-Juvenal-UI':'1'}};
@@ -71,6 +77,11 @@ async function poll(){
  polling=true;
  try{
   const r=await api('/api/status');phase=r.phase;
+  if(!wsSaving&&Date.now()-wsPollAt>2000){
+   wsPollAt=Date.now();
+   const cfg=await api('/api/ws');
+   $('wsSaved').textContent=cfg.persisted?'Salvo no ESP32':'Aplicado; aguardando salvar';
+  }
   $('status').textContent=`${({'idle':'Aguardando wake word','recording':'Gravando','ready':'Gravação pronta','sending':'Enviando','closing':'Liberando'})[phase]||phase} · ${Number(r.seconds||0).toFixed(2)}s`;
   const bootNames={starting:'Inicializando',error:'Falha / aguardando recuperação',ready:'Pronto: confirmação verde',normal:'Inicializado'};
   $('bootStatus').textContent=bootNames[r.boot_state]||r.boot_state||'-';
@@ -120,6 +131,18 @@ $('applyVolume').onclick=async()=>{
  finally{volumeSaving=false;$('applyVolume').disabled=false;$('volume').disabled=false;await poll()}
 };
 $('save').onclick=()=>act('/api/config', {url:$('url').value.trim()});
+async function saveWs(value){
+ if(wsSaving)return;
+ wsSaving=true;$('saveWs').disabled=true;$('resetWs').disabled=true;
+ try{
+  const result=await api('/api/ws','POST',{url:value});note(result.message);
+  const cfg=await api('/api/ws');$('wsUrl').value=cfg.url||'';
+  $('wsSaved').textContent=cfg.persisted?'Salvo no ESP32':'Aplicado; aguardando salvar';
+ }catch(e){note('Falha ao salvar servidor: '+e.message)}
+ finally{wsSaving=false;$('saveWs').disabled=false;$('resetWs').disabled=false}
+}
+$('saveWs').onclick=()=>saveWs($('wsUrl').value.trim());
+$('resetWs').onclick=()=>saveWs('');
 $('start').onclick=()=>act('/api/record/start');
 $('stop').onclick=()=>act('/api/record/stop');
 $('clear').onclick=()=>act('/api/record/clear');
@@ -131,6 +154,10 @@ $('preview').onclick=async()=>{busy=true;controls();try{
  lastBlobUrl=URL.createObjectURL(blob);$('player').src=lastBlobUrl;$('player').style.display='block';
  await $('player').play();note(`Reproduzindo ${blob.size} bytes no navegador.`);
 }catch(e){note('Falha ao reproduzir: '+e.message)}finally{busy=false;controls()}}
-async function init(){try{const cfg=await api('/api/config');$('url').value=cfg.url||''}catch(e){note(e.message)}await poll()}
+async function init(){try{
+ const cfg=await api('/api/config');$('url').value=cfg.url||'';
+ const server=await api('/api/ws');$('wsUrl').value=server.url||'';
+ $('wsDefault').textContent='Padrão compilado: '+(server.default_url||'não configurado');
+}catch(e){note(e.message)}await poll()}
 init();setInterval(()=>{if(!busy)poll()},500);
 </script></body></html>
